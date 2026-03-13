@@ -90,6 +90,9 @@ type Application struct {
 
 	// forceRedraw requests a full clear before the next frame.
 	forceRedraw bool
+
+	// afterDrawFunc, if set, is called after each screen.Show().
+	afterDrawFunc func(tcell.Screen)
 }
 
 // NewApplication creates and returns a new application.
@@ -471,6 +474,13 @@ func (a *Application) draw() *Application {
 	root.Draw(screen)
 	screen.Show()
 
+	a.RLock()
+	afterDraw := a.afterDrawFunc
+	a.RUnlock()
+	if afterDraw != nil {
+		afterDraw(screen)
+	}
+
 	a.Lock()
 	a.forceRedraw = false
 	a.Unlock()
@@ -493,6 +503,16 @@ func (a *Application) Sync() *Application {
 		}
 		screen.Sync()
 	}}
+	return a
+}
+
+// SetAfterDrawFunc sets a callback that is invoked after every screen.Show().
+// This is useful for writing directly to the TTY (e.g. Kitty/sixel image
+// protocol) without interfering with tcell's buffered output.
+func (a *Application) SetAfterDrawFunc(f func(tcell.Screen)) *Application {
+	a.Lock()
+	a.afterDrawFunc = f
+	a.Unlock()
 	return a
 }
 
