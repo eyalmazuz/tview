@@ -10,9 +10,7 @@ type ButtonSelectedEvent struct {
 }
 
 func newButtonSelectedEvent(label string) *ButtonSelectedEvent {
-	event := &ButtonSelectedEvent{Label: label}
-	event.SetEventNow()
-	return event
+	return &ButtonSelectedEvent{Label: label}
 }
 
 type ButtonExitEvent struct {
@@ -21,9 +19,7 @@ type ButtonExitEvent struct {
 }
 
 func newButtonExitEvent(key tcell.Key) *ButtonExitEvent {
-	event := &ButtonExitEvent{Key: key}
-	event.SetEventNow()
-	return event
+	return &ButtonExitEvent{Key: key}
 }
 
 // Button is labeled box that triggers an action when selected.
@@ -173,16 +169,16 @@ func (b *Button) HandleEvent(event tcell.Event) Command {
 		switch key := event.Key(); key {
 		case tcell.KeyEnter: // Selected.
 			label := b.GetLabel()
-			return EventCommand(func() tcell.Event {
+			return func() tcell.Event {
 				return newButtonSelectedEvent(label)
-			})
+			}
 		case tcell.KeyBacktab, tcell.KeyTab, tcell.KeyEscape: // Leave. No action.
 			exitKey := key
-			return EventCommand(func() tcell.Event {
+			return func() tcell.Event {
 				return newButtonExitEvent(exitKey)
-			})
+			}
 		}
-		return RedrawCommand{}
+		return nil
 	case *MouseEvent:
 		if !b.InRect(event.Position()) {
 			return nil
@@ -191,12 +187,12 @@ func (b *Button) HandleEvent(event tcell.Event) Command {
 		// Process mouse event.
 		switch event.Action {
 		case MouseLeftDown:
-			return SetFocusCommand{Target: b}
+			return SetFocus(b)
 		case MouseLeftClick:
 			label := b.GetLabel()
-			return EventCommand(func() tcell.Event {
+			return func() tcell.Event {
 				return newButtonSelectedEvent(label)
-			})
+			}
 		}
 	}
 	return nil

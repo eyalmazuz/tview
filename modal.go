@@ -32,12 +32,10 @@ type ModalDoneEvent struct {
 }
 
 func newModalDoneEvent(buttonIndex int, buttonLabel string) *ModalDoneEvent {
-	event := &ModalDoneEvent{
+	return &ModalDoneEvent{
 		ButtonIndex: buttonIndex,
 		ButtonLabel: buttonLabel,
 	}
-	event.SetEventNow()
-	return event
 }
 
 // NewModal returns a new modal message window.
@@ -165,20 +163,20 @@ func (m *Modal) HandleEvent(event tcell.Event) Command {
 	case *FormSubmitEvent:
 		buttonIndex := event.ButtonIndex
 		buttonLabel := event.ButtonLabel
-		return EventCommand(func() tcell.Event {
+		return func() tcell.Event {
 			return newModalDoneEvent(buttonIndex, buttonLabel)
-		})
+		}
 	case *FormCancelEvent:
-		return EventCommand(func() tcell.Event {
+		return func() tcell.Event {
 			return newModalDoneEvent(-1, "")
-		})
+		}
 	case *ButtonExitEvent:
 		return m.form.HandleEvent(event)
 	case *MouseEvent:
 		// Pass mouse events on to the form.
 		cmd := m.form.HandleEvent(event)
 		if cmd == nil && event.Action == MouseLeftDown && m.InRect(event.Position()) {
-			cmd = SetFocusCommand{Target: m}
+			cmd = SetFocus(m)
 		}
 		return cmd
 	case *KeyEvent:

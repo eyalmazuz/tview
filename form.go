@@ -118,21 +118,13 @@ type FormSubmitEvent struct {
 }
 
 func newFormSubmitEvent(buttonIndex int, buttonLabel string) *FormSubmitEvent {
-	event := &FormSubmitEvent{
+	return &FormSubmitEvent{
 		ButtonIndex: buttonIndex,
 		ButtonLabel: buttonLabel,
 	}
-	event.SetEventNow()
-	return event
 }
 
 type FormCancelEvent struct{ tcell.EventTime }
-
-func newFormCancelEvent() *FormCancelEvent {
-	event := &FormCancelEvent{}
-	event.SetEventNow()
-	return event
-}
 
 // NewForm returns a new form.
 func NewForm() *Form {
@@ -750,11 +742,11 @@ func (f *Form) consumeCancelEvent(cmd Command) Command {
 		return cmd
 	}
 	f.cancelRequested = false
-	cancelCmd := EventCommand(func() tcell.Event { return newFormCancelEvent() })
+	cancelCmd := func() tcell.Event { return &FormCancelEvent{} }
 	if cmd == nil {
 		return cancelCmd
 	}
-	return BatchCommand{cmd, cancelCmd}
+	return Batch(cmd, cancelCmd)
 }
 
 // focusIndex returns the index of the currently focused item, counting form
@@ -787,7 +779,7 @@ func (f *Form) HandleEvent(event tcell.Event) Command {
 	switch event := event.(type) {
 	case *ButtonExitEvent:
 		f.finished(event.Key)
-		return f.consumeCancelEvent(RedrawCommand{})
+		return f.consumeCancelEvent(nil)
 	case *MouseEvent:
 		// Determine items to pass mouse events to.
 		for _, item := range f.items {
@@ -808,16 +800,16 @@ func (f *Form) HandleEvent(event tcell.Event) Command {
 			}
 			switch event.Action {
 			case MouseLeftDown:
-				return SetFocusCommand{Target: button}
+				return SetFocus(button)
 			case MouseLeftClick:
 				buttonIndex := index
 				buttonLabel := button.GetLabel()
-				return BatchCommand{
-					EventCommand(func() tcell.Event {
+				return Batch(
+					func() tcell.Event {
 						return newFormSubmitEvent(buttonIndex, buttonLabel)
-					}),
-					RedrawCommand{},
-				}
+					},
+					nil,
+				)
 			default:
 				childCmds := button.HandleEvent(event)
 				if childCmds != nil {
@@ -828,7 +820,7 @@ func (f *Form) HandleEvent(event tcell.Event) Command {
 
 		// A mouse down anywhere else will focus this form.
 		if event.Action == MouseLeftDown && f.InRect(event.Position()) {
-			return SetFocusCommand{Target: f}
+			return SetFocus(f)
 		}
 	case *KeyEvent, *PasteEvent:
 		for _, item := range f.items {
@@ -844,12 +836,12 @@ func (f *Form) HandleEvent(event tcell.Event) Command {
 			if keyEvent, ok := event.(*KeyEvent); ok && keyEvent.Key() == tcell.KeyEnter {
 				buttonIndex := index
 				buttonLabel := button.GetLabel()
-				return BatchCommand{
-					EventCommand(func() tcell.Event {
+				return Batch(
+					func() tcell.Event {
 						return newFormSubmitEvent(buttonIndex, buttonLabel)
-					}),
-					RedrawCommand{},
-				}
+					},
+					nil,
+				)
 			}
 			return f.consumeCancelEvent(button.HandleEvent(event))
 		}
