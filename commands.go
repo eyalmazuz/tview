@@ -34,6 +34,10 @@ func Batch(cmds ...Command) Command {
 
 type InitEvent struct{ tcell.EventTime }
 
+func NewInitEvent() *InitEvent {
+	return &InitEvent{}
+}
+
 type KeyEvent = tcell.EventKey
 
 type MouseEvent struct {
