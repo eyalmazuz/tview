@@ -21,7 +21,7 @@ import (
 // in multi-line input. You can use [InputField.SetAcceptanceFunc] to prevent
 // this.
 //
-// See https://github.com/ayn2op/tview/wiki/InputField for an example.
+// See https://github.com/eyalmazuz/tview/wiki/InputField for an example.
 type InputField struct {
 	*Box
 

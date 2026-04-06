@@ -1,6 +1,6 @@
 package list
 
-import "github.com/ayn2op/tview/keybind"
+import "github.com/eyalmazuz/tview/keybind"
 
 type Keybinds struct {
 	SelectUp     keybind.Keybind

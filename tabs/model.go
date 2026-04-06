@@ -2,7 +2,6 @@ package tabs
 
 import (
 	"github.com/eyalmazuz/tview"
-	"github.com/eyalmazuz/tview/help"
 	"github.com/eyalmazuz/tview/keybind"
 	"github.com/gdamore/tcell/v3"
 )

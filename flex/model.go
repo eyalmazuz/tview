@@ -3,7 +3,7 @@ package flex
 import (
 	"slices"
 
-	"github.com/ayn2op/tview"
+	"github.com/eyalmazuz/tview"
 	"github.com/gdamore/tcell/v3"
 )
 
@@ -34,7 +34,7 @@ type item struct {
 // distributed along that dimension depends on their layout settings, which is
 // either a fixed length or a proportional length. See AddItem() for details.
 //
-// See https://github.com/ayn2op/tview/wiki/Flex for an example.
+// See https://github.com/eyalmazuz/tview/wiki/Flex for an example.
 type Model struct {
 	*tview.Box
 

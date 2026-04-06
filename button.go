@@ -24,7 +24,7 @@ func newButtonExitMsg(key tcell.Key) *ButtonExitMsg {
 
 // Button is labeled box that triggers an action when selected.
 //
-// See https://github.com/ayn2op/tview/wiki/Button for an example.
+// See https://github.com/eyalmazuz/tview/wiki/Button for an example.
 type Button struct {
 	*Box
 	// If set to true, the button cannot be activated.
