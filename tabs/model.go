@@ -2,19 +2,18 @@ package tabs
 
 import (
 	"github.com/ayn2op/tview"
-	"github.com/ayn2op/tview/help"
 	"github.com/ayn2op/tview/keybind"
 	"github.com/gdamore/tcell/v3"
 )
 
 type Tab interface {
-	tview.Primitive
+	tview.Model
 	Label() string
 }
 
 type Model struct {
 	*tview.Box
-	Keybinds Keybinds
+	keybinds Keybinds
 
 	tabs   []Tab
 	active int
@@ -27,7 +26,7 @@ type Model struct {
 func NewModel(tabs []Tab) *Model {
 	return &Model{
 		Box:      tview.NewBox(),
-		Keybinds: DefaultKeybinds(),
+		keybinds: DefaultKeybinds(),
 
 		tabs: tabs,
 
@@ -36,9 +35,6 @@ func NewModel(tabs []Tab) *Model {
 		activeLabelStyle: tcell.StyleDefault.Reverse(true),
 	}
 }
-
-var _ tview.Primitive = (*Model)(nil)
-var _ help.KeyMap = (*Model)(nil)
 
 func (m *Model) canPrevious() bool {
 	return len(m.tabs) > 0 && m.active > 0
@@ -56,7 +52,7 @@ func (m *Model) Next() {
 	m.active = min(m.active+1, len(m.tabs)-1)
 }
 
-func (m *Model) Focus(delegate func(p tview.Primitive)) {
+func (m *Model) Focus(delegate func(m tview.Model)) {
 	if len(m.tabs) == 0 {
 		m.Box.Focus(delegate)
 		return
@@ -78,31 +74,63 @@ func (m *Model) Blur() {
 	m.Box.Blur()
 }
 
-func (m *Model) HandleEvent(event tcell.Event) tview.Command {
+func (m *Model) Update(msg tview.Msg) tview.Cmd {
 	if len(m.tabs) == 0 {
 		return nil
 	}
 
-	switch event := event.(type) {
-	case *tview.InitEvent:
+	switch msg := msg.(type) {
+	case *tview.InitMsg:
 		return m.activateTab()
-	case *tview.KeyEvent:
+	case *tview.KeyMsg:
 		switch {
-		case keybind.Matches(event, m.Keybinds.Previous):
+		case keybind.Matches(msg, m.keybinds.Previous):
 			if !m.canPrevious() {
-				return m.tabs[m.active].HandleEvent(event)
+				return m.tabs[m.active].Update(msg)
 			}
 			m.Previous()
 			return m.activateTab()
-		case keybind.Matches(event, m.Keybinds.Next):
+		case keybind.Matches(msg, m.keybinds.Next):
 			if !m.canNext() {
-				return m.tabs[m.active].HandleEvent(event)
+				return m.tabs[m.active].Update(msg)
 			}
 			m.Next()
 			return m.activateTab()
 		}
+	case *tview.MouseMsg:
+		x, y := msg.Position()
+		if !m.InRect(x, y) {
+			return nil
+		}
+
+		if msg.Action == tview.MouseLeftDown {
+			return tview.SetFocus(m)
+		}
+
+		if tab, ok := m.tabAt(x, y); ok {
+			switch msg.Action {
+			case tview.MouseLeftClick:
+				if tab == m.active {
+					return tview.SetFocus(m)
+				}
+				m.active = tab
+				return m.activateTab()
+			case tview.MouseScrollUp, tview.MouseScrollLeft:
+				if !m.canPrevious() {
+					return nil
+				}
+				m.Previous()
+				return m.activateTab()
+			case tview.MouseScrollDown, tview.MouseScrollRight:
+				if !m.canNext() {
+					return nil
+				}
+				m.Next()
+				return m.activateTab()
+			}
+		}
 	}
-	return m.tabs[m.active].HandleEvent(event)
+	return m.tabs[m.active].Update(msg)
 }
 
 func (m *Model) Draw(screen tcell.Screen) {
@@ -112,9 +140,9 @@ func (m *Model) Draw(screen tcell.Screen) {
 		return
 	}
 
-	x, y, width, height := m.GetInnerRect()
+	x, y, width, height := m.InnerRect()
 	tmpX := x
-	var content tview.Primitive
+	var content tview.Model
 	for i, tab := range m.tabs {
 		labelStyle := m.labelStyle
 		if i == m.active {
@@ -136,49 +164,34 @@ func (m *Model) Draw(screen tcell.Screen) {
 	}
 }
 
-func (m *Model) activateTab() tview.Command {
+func (m *Model) activateTab() tview.Cmd {
 	return tview.Batch(
-		m.tabs[m.active].HandleEvent(&tview.InitEvent{}),
+		m.tabs[m.active].Update(&tview.InitMsg{}),
 		tview.SetFocus(m),
 	)
 }
 
-func (m *Model) ShortHelp() []keybind.Keybind {
-	if len(m.tabs) == 0 {
-		return nil
+func (m *Model) tabAt(x, y int) (int, bool) {
+	innerX, innerY, width, _ := m.InnerRect()
+	if y != innerY {
+		return 0, false
 	}
 
-	var short []keybind.Keybind
-	if m.canPrevious() {
-		short = append(short, m.Keybinds.Previous)
-	}
-	if m.canNext() {
-		short = append(short, m.Keybinds.Next)
-	}
-	if activeKeyMap, ok := m.tabs[m.active].(help.KeyMap); ok {
-		short = append(short, activeKeyMap.ShortHelp()...)
-	}
-	return short
-}
-
-func (m *Model) FullHelp() [][]keybind.Keybind {
-	if len(m.tabs) == 0 {
-		return nil
+	tmpX := innerX
+	for i, tab := range m.tabs {
+		labelWidth := len(tab.Label())
+		labelX := tmpX
+		switch m.labelAlignment {
+		case tview.AlignmentCenter:
+			labelX = tmpX + width/2 - labelWidth/2
+		case tview.AlignmentRight:
+			labelX = tmpX + width - labelWidth
+		}
+		if x >= labelX && x < labelX+labelWidth {
+			return i, true
+		}
+		tmpX += labelWidth + 1
 	}
 
-	var nav []keybind.Keybind
-	if m.canPrevious() {
-		nav = append(nav, m.Keybinds.Previous)
-	}
-	if m.canNext() {
-		nav = append(nav, m.Keybinds.Next)
-	}
-	var full [][]keybind.Keybind
-	if len(nav) > 0 {
-		full = append(full, nav)
-	}
-	if activeKeyMap, ok := m.tabs[m.active].(help.KeyMap); ok {
-		full = append(full, activeKeyMap.FullHelp()...)
-	}
-	return full
+	return 0, false
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/gdamore/tcell/v3"
 )
 
-type TreeViewSelectedEvent struct {
+type TreeViewSelectedMsg struct {
 	tcell.EventTime
 	Node *TreeNode
 }
@@ -303,7 +303,7 @@ func (n *TreeNode) GetLevel() int {
 //   - Ctrl-F, page down: Move (the cursor) down by one page.
 //   - Ctrl-B, page up: Move (the cursor) up by one page.
 //
-// Selected nodes emit [TreeViewSelectedEvent] when the user hits Enter.
+// Selected nodes emit [TreeViewSelectedMsg] when the user hits Enter.
 //
 // The root node corresponds to level 0, its children correspond to level 1,
 // their children to level 2, and so on. Per default, the first level that is
@@ -585,7 +585,7 @@ func (t *TreeView) Move(offset int) *TreeView {
 // having [TreeView.Draw] call it again).
 func (t *TreeView) process(drawingAfter bool) {
 	t.stableNodes = drawingAfter
-	_, _, _, height := t.GetInnerRect()
+	_, _, _, height := t.InnerRect()
 
 	// Determine visible nodes and their placement.
 	t.nodes = nil
@@ -747,7 +747,7 @@ func (t *TreeView) process(drawingAfter bool) {
 	t.lastNode = t.currentNode
 }
 
-// Draw draws this primitive onto the screen.
+// Draw draws this model onto the screen.
 func (t *TreeView) Draw(screen tcell.Screen) {
 	t.DrawForSubclass(screen, t)
 	if t.root == nil {
@@ -763,7 +763,7 @@ func (t *TreeView) Draw(screen tcell.Screen) {
 
 	// Scroll the tree, t.movement is treeNone after process() when there is a
 	// cursor, except for treeScroll, treeHome, and treeEnd.
-	x, y, width, height := t.GetInnerRect()
+	x, y, width, height := t.InnerRect()
 	switch t.movement {
 	case treeMove:
 		t.movement = treeNone
@@ -949,22 +949,22 @@ func mergeStyle(base, overlay tcell.Style) tcell.Style {
 	return base
 }
 
-func (t *TreeView) selectCurrentNode() Command {
+func (t *TreeView) selectCurrentNode() Cmd {
 	node := t.currentNode
 	if node == nil {
 		return nil
 	}
 	selectedNode := node
-	return func() tcell.Event {
-		return &TreeViewSelectedEvent{Node: selectedNode}
+	return func() Msg {
+		return &TreeViewSelectedMsg{Node: selectedNode}
 	}
 }
 
-func (t *TreeView) handleKeyEvent(event *KeyEvent) Command {
+func (t *TreeView) handleKeyMsg(msg *KeyMsg) Cmd {
 	// Because the tree is flattened into a list only at drawing time, we also
 	// postpone the (cursor) movement to drawing time.
-	var selectCmd Command
-	switch key := event.Key(); key {
+	var selectCmd Cmd
+	switch key := msg.Key(); key {
 	case tcell.KeyDown, tcell.KeyRight:
 		t.movement = treeMove
 		t.step = 1
@@ -976,15 +976,15 @@ func (t *TreeView) handleKeyEvent(event *KeyEvent) Command {
 	case tcell.KeyEnd:
 		t.movement = treeEnd
 	case tcell.KeyPgDn, tcell.KeyCtrlF:
-		_, _, _, height := t.GetInnerRect()
+		_, _, _, height := t.InnerRect()
 		t.movement = treeMove
 		t.step = height
 	case tcell.KeyPgUp, tcell.KeyCtrlB:
-		_, _, _, height := t.GetInnerRect()
+		_, _, _, height := t.InnerRect()
 		t.movement = treeMove
 		t.step = -height
 	case tcell.KeyRune:
-		switch event.Str() {
+		switch msg.Str() {
 		case "g":
 			t.movement = treeHome
 		case "G":
@@ -1010,17 +1010,17 @@ func (t *TreeView) handleKeyEvent(event *KeyEvent) Command {
 	return selectCmd
 }
 
-func (t *TreeView) handleMouseEvent(event *MouseEvent) Command {
-	x, y := event.Position()
+func (t *TreeView) handleMouseMsg(msg *MouseMsg) Cmd {
+	x, y := msg.Position()
 	if !t.InRect(x, y) {
 		return nil
 	}
 
-	switch event.Action {
+	switch msg.Action {
 	case MouseLeftDown:
 		t.lastMouseY = y
 	case MouseMove:
-		if event.Buttons()&tcell.Button1 != 0 && t.lastMouseY != -1 {
+		if msg.Buttons()&tcell.Button1 != 0 && t.lastMouseY != -1 {
 			t.movement = treeScroll
 			t.step = t.lastMouseY - y
 			t.lastMouseY = y
@@ -1028,7 +1028,7 @@ func (t *TreeView) handleMouseEvent(event *MouseEvent) Command {
 	case MouseLeftUp:
 		t.lastMouseY = -1
 	case MouseLeftClick:
-		_, rectY, _, _ := t.GetInnerRect()
+		_, rectY, _, _ := t.InnerRect()
 		y += t.offsetY - rectY
 		if t.lastMouseY != -1 {
 			y += t.lastMouseY - y
@@ -1039,8 +1039,8 @@ func (t *TreeView) handleMouseEvent(event *MouseEvent) Command {
 			node := t.nodes[y]
 			if node.selectable {
 				t.currentNode = node
-				return Batch(SetFocus(t), func() tcell.Event {
-					return &TreeViewSelectedEvent{Node: node}
+				return Batch(SetFocus(t), func() Msg {
+					return &TreeViewSelectedMsg{Node: node}
 				})
 			}
 		}
@@ -1055,13 +1055,13 @@ func (t *TreeView) handleMouseEvent(event *MouseEvent) Command {
 	return nil
 }
 
-// HandleEvent handles input events for this primitive.
-func (t *TreeView) HandleEvent(event tcell.Event) Command {
-	switch event := event.(type) {
-	case *KeyEvent:
-		return t.handleKeyEvent(event)
-	case *MouseEvent:
-		return t.handleMouseEvent(event)
+// Update handles input events for this model.
+func (t *TreeView) Update(msg Msg) Cmd {
+	switch msg := msg.(type) {
+	case *KeyMsg:
+		return t.handleKeyMsg(msg)
+	case *MouseMsg:
+		return t.handleMouseMsg(msg)
 	}
 	return nil
 }

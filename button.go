@@ -4,22 +4,22 @@ import (
 	"github.com/gdamore/tcell/v3"
 )
 
-type ButtonSelectedEvent struct {
+type ButtonSelectedMsg struct {
 	tcell.EventTime
 	Label string
 }
 
-func newButtonSelectedEvent(label string) *ButtonSelectedEvent {
-	return &ButtonSelectedEvent{Label: label}
+func newButtonSelectedMsg(label string) *ButtonSelectedMsg {
+	return &ButtonSelectedMsg{Label: label}
 }
 
-type ButtonExitEvent struct {
+type ButtonExitMsg struct {
 	tcell.EventTime
 	tcell.Key
 }
 
-func newButtonExitEvent(key tcell.Key) *ButtonExitEvent {
-	return &ButtonExitEvent{Key: key}
+func newButtonExitMsg(key tcell.Key) *ButtonExitMsg {
+	return &ButtonExitMsg{Key: key}
 }
 
 // Button is labeled box that triggers an action when selected.
@@ -135,7 +135,7 @@ func (b *Button) GetDisabled() bool {
 	return b.disabled
 }
 
-// Draw draws this primitive onto the screen.
+// Draw draws this model onto the screen.
 func (b *Button) Draw(screen tcell.Screen) {
 	// Draw the box.
 	style := b.style
@@ -150,48 +150,48 @@ func (b *Button) Draw(screen tcell.Screen) {
 	b.DrawForSubclass(screen, b)
 
 	// Draw label.
-	x, y, width, height := b.GetInnerRect()
+	x, y, width, height := b.InnerRect()
 	if width > 0 && height > 0 {
 		y = y + height/2
 		printWithStyle(screen, b.text, x, y, 0, width, AlignmentCenter, style, true)
 	}
 }
 
-// HandleEvent handles input events for this primitive.
-func (b *Button) HandleEvent(event tcell.Event) Command {
+// Update handles input events for this model.
+func (b *Button) Update(msg Msg) Cmd {
 	if b.disabled {
 		return nil
 	}
 
-	switch event := event.(type) {
-	case *KeyEvent:
+	switch msg := msg.(type) {
+	case *KeyMsg:
 		// Process key event.
-		switch key := event.Key(); key {
+		switch key := msg.Key(); key {
 		case tcell.KeyEnter: // Selected.
 			label := b.GetLabel()
-			return func() tcell.Event {
-				return newButtonSelectedEvent(label)
+			return func() Msg {
+				return newButtonSelectedMsg(label)
 			}
 		case tcell.KeyBacktab, tcell.KeyTab, tcell.KeyEscape: // Leave. No action.
 			exitKey := key
-			return func() tcell.Event {
-				return newButtonExitEvent(exitKey)
+			return func() Msg {
+				return newButtonExitMsg(exitKey)
 			}
 		}
 		return nil
-	case *MouseEvent:
-		if !b.InRect(event.Position()) {
+	case *MouseMsg:
+		if !b.InRect(msg.Position()) {
 			return nil
 		}
 
 		// Process mouse event.
-		switch event.Action {
+		switch msg.Action {
 		case MouseLeftDown:
 			return SetFocus(b)
 		case MouseLeftClick:
 			label := b.GetLabel()
-			return func() tcell.Event {
-				return newButtonSelectedEvent(label)
+			return func() Msg {
+				return newButtonSelectedMsg(label)
 			}
 		}
 	}

@@ -2,18 +2,19 @@ package tview
 
 import "github.com/gdamore/tcell/v3"
 
-// Command is a side effect requested by a primitive during input handling.
-// Commands are executed by the Application event loop.
-type Command func() tcell.Event
+type Msg = tcell.Event
 
-type batchEvent struct {
+// Cmd is a side effect requested by a model during input handling.
+type Cmd func() Msg
+
+type batchMsg struct {
 	tcell.EventTime
-	commands []Command
+	cmds []Cmd
 }
 
 // Batch combines multiple commands into a single command.
-func Batch(cmds ...Command) Command {
-	var valid []Command
+func Batch(cmds ...Cmd) Cmd {
+	var valid []Cmd
 	for _, cmd := range cmds {
 		if cmd == nil {
 			continue
@@ -26,105 +27,97 @@ func Batch(cmds ...Command) Command {
 	case 1:
 		return valid[0]
 	default:
-		return func() tcell.Event {
-			return &batchEvent{commands: valid}
+		return func() Msg {
+			return &batchMsg{cmds: valid}
 		}
 	}
 }
 
-type InitEvent struct{ tcell.EventTime }
+type InitMsg struct{ tcell.EventTime }
 
-func NewInitEvent() *InitEvent {
-	return &InitEvent{}
+func NewInitMsg() *InitMsg {
+	return &InitMsg{}
 }
 
-type KeyEvent = tcell.EventKey
+type KeyMsg = tcell.EventKey
 
-type MouseEvent struct {
+type MouseMsg struct {
 	tcell.EventMouse
 	Action MouseAction
 }
 
-func newMouseEvent(mouseEvent tcell.EventMouse, action MouseAction) *MouseEvent {
-	return &MouseEvent{mouseEvent, action}
-}
-
-type PasteEvent struct {
+type PasteMsg struct {
 	tcell.EventTime
 	Content string
 }
 
-func newPasteEvent(content string) *PasteEvent {
-	return &PasteEvent{Content: content}
-}
+type quitMsg struct{ tcell.EventTime }
 
-type quitEvent struct{ tcell.EventTime }
-
-func Quit() Command {
-	return func() tcell.Event {
-		return &quitEvent{}
+func Quit() Cmd {
+	return func() Msg {
+		return &quitMsg{}
 	}
 }
 
-type setFocusEvent struct {
+type setFocusMsg struct {
 	tcell.EventTime
-	target Primitive
+	target Model
 }
 
-func SetFocus(target Primitive) Command {
-	return func() tcell.Event {
-		return &setFocusEvent{target: target}
+func SetFocus(target Model) Cmd {
+	return func() Msg {
+		return &setFocusMsg{target: target}
 	}
 }
 
-type setMouseCaptureEvent struct {
+type setMouseCaptureMsg struct {
 	tcell.EventTime
-	target Primitive
+	target Model
 }
 
-func SetMouseCapture(target Primitive) Command {
-	return func() tcell.Event {
-		return &setMouseCaptureEvent{target: target}
+func SetMouseCapture(target Model) Cmd {
+	return func() Msg {
+		return &setMouseCaptureMsg{target: target}
 	}
 }
 
-type setTitleEvent struct {
+type setTitleMsg struct {
 	tcell.EventTime
 	title string
 }
 
-func SetTitle(title string) Command {
-	return func() tcell.Event {
-		return &setTitleEvent{title: title}
+func SetTitle(title string) Cmd {
+	return func() Msg {
+		return &setTitleMsg{title: title}
 	}
 }
 
-type getClipboardEvent struct{ tcell.EventTime }
+type getClipboardMsg struct{ tcell.EventTime }
 
-func GetClipboard() Command {
-	return func() tcell.Event {
-		return &getClipboardEvent{}
+func GetClipboard() Cmd {
+	return func() Msg {
+		return &getClipboardMsg{}
 	}
 }
 
-type setClipboardEvent struct {
+type setClipboardMsg struct {
 	tcell.EventTime
 	data []byte
 }
 
-func SetClipboard(data []byte) Command {
-	return func() tcell.Event {
-		return &setClipboardEvent{data: data}
+func SetClipboard(data []byte) Cmd {
+	return func() Msg {
+		return &setClipboardMsg{data: data}
 	}
 }
 
-type notifyEvent struct {
+type notifyMsg struct {
 	tcell.EventTime
 	title, body string
 }
 
-func Notify(title, body string) Command {
-	return func() tcell.Event {
-		return &notifyEvent{title: title, body: body}
+func Notify(title, body string) Cmd {
+	return func() Msg {
+		return &notifyMsg{title: title, body: body}
 	}
 }

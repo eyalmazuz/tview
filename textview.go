@@ -168,7 +168,7 @@ func (t *TextView) GetLabel() string {
 }
 
 // SetLabelWidth sets the screen width of the label. A value of 0 will cause the
-// primitive to use the width of the label string.
+// model to use the width of the label string.
 func (t *TextView) SetLabelWidth(width int) *TextView {
 	if t.labelWidth != width {
 		t.labelWidth = width
@@ -185,12 +185,12 @@ func (t *TextView) SetSize(rows, columns int) *TextView {
 	return t
 }
 
-// GetFieldWidth returns this primitive's field width.
+// GetFieldWidth returns this model's field width.
 func (t *TextView) GetFieldWidth() int {
 	return t.width
 }
 
-// GetFieldHeight returns this primitive's field height.
+// GetFieldHeight returns this model's field height.
 func (t *TextView) GetFieldHeight() int {
 	return t.height
 }
@@ -258,7 +258,7 @@ func (t *TextView) SetTextAlign(alignment Alignment) *TextView {
 }
 
 // SetBackgroundColor overrides its implementation in Box to set the background
-// color of this primitive.
+// color of this model.
 func (t *TextView) SetBackgroundColor(color tcell.Color) *Box {
 	t.Box.SetBackgroundColor(color)
 	return t.Box
@@ -515,8 +515,8 @@ func (t *TextView) clear() {
 	t.resetLayout()
 }
 
-// Focus is called when this primitive receives focus.
-func (t *TextView) Focus(delegate func(p Primitive)) {
+// Focus is called when this model receives focus.
+func (t *TextView) Focus(delegate func(m Model)) {
 	t.Lock()
 	if finished := t.finished; finished != nil && !t.scrollable {
 		t.Unlock()
@@ -527,7 +527,7 @@ func (t *TextView) Focus(delegate func(p Primitive)) {
 	t.Unlock()
 }
 
-// HasFocus returns whether or not this primitive has focus.
+// HasFocus returns whether or not this model has focus.
 func (t *TextView) HasFocus() bool {
 	t.Lock()
 	defer t.Unlock()
@@ -737,13 +737,13 @@ func (t *TextView) cellWidth(cell textViewCell, leftPos int) int {
 	return cell.width
 }
 
-// Draw draws this primitive onto the screen.
+// Draw draws this model onto the screen.
 func (t *TextView) Draw(screen tcell.Screen) {
 	t.DrawForSubclass(screen, t)
 	t.Lock()
 	defer t.Unlock()
 
-	x, y, width, height := t.GetInnerRect()
+	x, y, width, height := t.InnerRect()
 	labelBg := t.labelStyle.GetBackground()
 	if t.labelWidth > 0 {
 		labelWidth := min(t.labelWidth, width)
@@ -878,12 +878,12 @@ func (t *TextView) Draw(screen tcell.Screen) {
 	}
 }
 
-// HandleEvent handles input events for this primitive.
-func (t *TextView) HandleEvent(event tcell.Event) Command {
-	switch event := event.(type) {
-	case *KeyEvent:
+// Update handles input events for this model.
+func (t *TextView) Update(msg Msg) Cmd {
+	switch msg := msg.(type) {
+	case *KeyMsg:
 		previousLineOffset, previousColumnOffset, previousTrackEnd := t.lineOffset, t.columnOffset, t.trackEnd
-		key := event.Key()
+		key := msg.Key()
 
 		if key == tcell.KeyEscape || key == tcell.KeyEnter || key == tcell.KeyTab || key == tcell.KeyBacktab {
 			if t.done != nil {
@@ -901,7 +901,7 @@ func (t *TextView) HandleEvent(event tcell.Event) Command {
 
 		switch key {
 		case tcell.KeyRune:
-			switch event.Str() {
+			switch msg.Str() {
 			case "g":
 				t.trackEnd = false
 				t.lineOffset = 0
@@ -936,25 +936,25 @@ func (t *TextView) HandleEvent(event tcell.Event) Command {
 		case tcell.KeyRight:
 			t.columnOffset++
 		case tcell.KeyPgDn, tcell.KeyCtrlF:
-			_, _, _, pageSize := t.GetInnerRect()
+			_, _, _, pageSize := t.InnerRect()
 			t.lineOffset += pageSize
 		case tcell.KeyPgUp, tcell.KeyCtrlB:
-			_, _, _, pageSize := t.GetInnerRect()
+			_, _, _, pageSize := t.InnerRect()
 			t.trackEnd = false
 			t.lineOffset -= pageSize
 		}
 		if t.lineOffset != previousLineOffset || t.columnOffset != previousColumnOffset || t.trackEnd != previousTrackEnd {
 			return nil
 		}
-	case *MouseEvent:
-		var cmds []Command
-		x, y := event.Position()
+	case *MouseMsg:
+		var cmds []Cmd
+		x, y := msg.Position()
 		if !t.InRect(x, y) {
 			return nil
 		}
 
-		_, _, width, _ := t.GetInnerRect()
-		switch event.Action {
+		_, _, width, _ := t.InnerRect()
+		switch msg.Action {
 		case MouseLeftDown:
 			cmds = append(cmds, SetFocus(t))
 		case MouseLeftClick:

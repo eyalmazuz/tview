@@ -25,14 +25,14 @@ type Modal struct {
 	textColor tcell.Color
 }
 
-type ModalDoneEvent struct {
+type ModalDoneMsg struct {
 	tcell.EventTime
 	ButtonIndex int
 	ButtonLabel string
 }
 
-func newModalDoneEvent(buttonIndex int, buttonLabel string) *ModalDoneEvent {
-	return &ModalDoneEvent{
+func newModalDoneMsg(buttonIndex int, buttonLabel string) *ModalDoneMsg {
+	return &ModalDoneMsg{
 		ButtonIndex: buttonIndex,
 		ButtonLabel: buttonLabel,
 	}
@@ -114,17 +114,17 @@ func (m *Modal) SetFocus(index int) *Modal {
 	return m
 }
 
-// Focus is called when this primitive receives focus.
-func (m *Modal) Focus(delegate func(p Primitive)) {
+// Focus is called when this model receives focus.
+func (m *Modal) Focus(delegate func(m Model)) {
 	delegate(m.form)
 }
 
-// HasFocus returns whether or not this primitive has focus.
+// HasFocus returns whether or not this model has focus.
 func (m *Modal) HasFocus() bool {
 	return m.form.HasFocus()
 }
 
-// Draw draws this primitive onto the screen.
+// Draw draws this model onto the screen.
 func (m *Modal) Draw(screen tcell.Screen) {
 	// Calculate the width of this modal.
 	buttonsWidth := 0
@@ -152,48 +152,48 @@ func (m *Modal) Draw(screen tcell.Screen) {
 
 	// Draw the frame.
 	m.DrawForSubclass(screen, m)
-	x, y, width, height = m.GetInnerRect()
+	x, y, width, height = m.InnerRect()
 	m.frame.SetRect(x, y, width, height)
 	m.frame.Draw(screen)
 }
 
-// HandleEvent handles input events for this primitive.
-func (m *Modal) HandleEvent(event tcell.Event) Command {
-	switch event := event.(type) {
-	case *FormSubmitEvent:
-		buttonIndex := event.ButtonIndex
-		buttonLabel := event.ButtonLabel
-		return func() tcell.Event {
-			return newModalDoneEvent(buttonIndex, buttonLabel)
+// Update handles input events for this model.
+func (m *Modal) Update(msg Msg) Cmd {
+	switch msg := msg.(type) {
+	case *FormSubmitMsg:
+		buttonIndex := msg.ButtonIndex
+		buttonLabel := msg.ButtonLabel
+		return func() Msg {
+			return newModalDoneMsg(buttonIndex, buttonLabel)
 		}
-	case *FormCancelEvent:
-		return func() tcell.Event {
-			return newModalDoneEvent(-1, "")
+	case *FormCancelMsg:
+		return func() Msg {
+			return newModalDoneMsg(-1, "")
 		}
-	case *ButtonExitEvent:
-		return m.form.HandleEvent(event)
-	case *MouseEvent:
+	case *ButtonExitMsg:
+		return m.form.Update(msg)
+	case *MouseMsg:
 		// Pass mouse events on to the form.
-		cmd := m.form.HandleEvent(event)
-		if cmd == nil && event.Action == MouseLeftDown && m.InRect(event.Position()) {
+		cmd := m.form.Update(msg)
+		if cmd == nil && msg.Action == MouseLeftDown && m.InRect(msg.Position()) {
 			cmd = SetFocus(m)
 		}
 		return cmd
-	case *KeyEvent:
+	case *KeyMsg:
 		// Keep arrow-key navigation between modal buttons.
-		switch event.Key() {
+		switch msg.Key() {
 		case tcell.KeyDown, tcell.KeyRight:
-			event = tcell.NewEventKey(tcell.KeyTab, "", tcell.ModNone)
+			msg = tcell.NewEventKey(tcell.KeyTab, "", tcell.ModNone)
 		case tcell.KeyUp, tcell.KeyLeft:
-			event = tcell.NewEventKey(tcell.KeyBacktab, "", tcell.ModNone)
+			msg = tcell.NewEventKey(tcell.KeyBacktab, "", tcell.ModNone)
 		}
 		// Forward the key event to the frame so the focused form button receives Tab/Backtab and Form.finished can move focus to the next/previous button.
 		if m.frame.HasFocus() {
-			return m.frame.HandleEvent(event)
+			return m.frame.Update(msg)
 		}
-	case *PasteEvent:
+	case *PasteMsg:
 		if m.frame.HasFocus() {
-			return m.frame.HandleEvent(event)
+			return m.frame.Update(msg)
 		}
 	}
 	return nil

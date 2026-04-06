@@ -158,7 +158,7 @@ type textAreaUndoItem struct {
 //
 // The Ctrl-Q key was chosen for the default "copy" function to avoid clashing
 // with common Ctrl-C quit bindings in user applications. You may remap keys in
-// your primitive's HandleEvent and implement copying to the clipboard. Note
+// your model's Update and implement copying to the clipboard. Note
 // that using your terminal's /
 // operating system's key bindings for copy+paste functionality may not have the
 // expected effect as tview will not be able to handle these keys. Pasting text
@@ -329,7 +329,7 @@ type TextArea struct {
 	// been performed yet, this is the same as len(undoStack).
 	nextUndo int
 
-	// Event handlers:
+	// Message handlers:
 
 	// An optional function which is called when the input has changed.
 	changed func()
@@ -798,7 +798,7 @@ func (t *TextArea) GetLabel() string {
 }
 
 // SetLabelWidth sets the screen width of the label. A value of 0 will cause the
-// primitive to use the width of the label string.
+// model to use the width of the label string.
 func (t *TextArea) SetLabelWidth(width int) *TextArea {
 	if t.labelWidth != width {
 		t.labelWidth = width
@@ -823,12 +823,12 @@ func (t *TextArea) SetSize(rows, columns int) *TextArea {
 	return t
 }
 
-// GetFieldWidth returns this primitive's field width.
+// GetFieldWidth returns this model's field width.
 func (t *TextArea) GetFieldWidth() int {
 	return t.width
 }
 
-// GetFieldHeight returns this primitive's field height.
+// GetFieldHeight returns this model's field height.
 func (t *TextArea) GetFieldHeight() int {
 	return t.height
 }
@@ -973,8 +973,8 @@ func (t *TextArea) SetFinishedFunc(handler func(key tcell.Key)) FormItem {
 	return t
 }
 
-// Focus is called when this primitive receives focus.
-func (t *TextArea) Focus(delegate func(p Primitive)) {
+// Focus is called when this model receives focus.
+func (t *TextArea) Focus(delegate func(m Model)) {
 	// If we're part of a form and this item is disabled, there's nothing the
 	// user can do here so we're finished.
 	if t.finished != nil && t.disabled {
@@ -1173,12 +1173,12 @@ func (t *TextArea) replace(deleteStart, deleteEnd [3]int, insert string, continu
 	return deleteEnd
 }
 
-// Draw draws this primitive onto the screen.
+// Draw draws this model onto the screen.
 func (t *TextArea) Draw(screen tcell.Screen) {
 	t.DrawForSubclass(screen, t)
 
 	// Prepare
-	x, y, width, height := t.GetInnerRect()
+	x, y, width, height := t.InnerRect()
 	if width <= 0 || height <= 0 {
 		return // We have no space for anything.
 	}
@@ -1942,11 +1942,11 @@ func (t *TextArea) getSelectedText() string {
 	return text.String()
 }
 
-func (t *TextArea) handleKeyEvent(event *tcell.EventKey) Command {
+func (t *TextArea) handleKeyMsg(event *KeyMsg) Cmd {
 	if t.disabled {
 		return nil
 	}
-	var cmd Command
+	var cmd Cmd
 
 	// All actions except a few specific ones are "other" actions.
 	newLastAction := taActionOther
@@ -2326,16 +2326,16 @@ func (t *TextArea) handleKeyEvent(event *tcell.EventKey) Command {
 	return cmd
 }
 
-func (t *TextArea) handleMouseEvent(event *MouseEvent) Command {
+func (t *TextArea) handleMouseMsg(msg *MouseMsg) Cmd {
 	if t.disabled {
 		return nil
 	}
 
-	x, y := event.Position()
-	rectX, rectY, _, _ := t.GetInnerRect()
+	x, y := msg.Position()
+	rectX, rectY, _, _ := t.InnerRect()
 	if !t.InRect(x, y) {
 		if t.dragging {
-			if event.Action == MouseLeftUp {
+			if msg.Action == MouseLeftUp {
 				t.dragging = false
 			}
 			return SetMouseCapture(nil)
@@ -2366,11 +2366,11 @@ func (t *TextArea) handleMouseEvent(event *MouseEvent) Command {
 	row += t.rowOffset
 
 	// Process mouse actions.
-	var cmds []Command
-	switch event.Action {
+	var cmds []Cmd
+	switch msg.Action {
 	case MouseLeftDown:
 		t.moveCursor(row, column)
-		if event.Modifiers()&tcell.ModShift == 0 {
+		if msg.Modifiers()&tcell.ModShift == 0 {
 			t.selectionStart = t.cursor
 		}
 		cmds = append(cmds, SetFocus(t), SetMouseCapture(t))
@@ -2417,9 +2417,9 @@ func (t *TextArea) handleMouseEvent(event *MouseEvent) Command {
 	return Batch(cmds...)
 }
 
-func (t *TextArea) handlePasteEvent(event *PasteEvent) Command {
+func (t *TextArea) handlePasteMsg(msg *PasteMsg) Cmd {
 	from, to, row := t.getSelection()
-	t.cursor.pos = t.replace(from, to, event.Content, false)
+	t.cursor.pos = t.replace(from, to, msg.Content, false)
 	t.cursor.row = -1
 	t.truncateLines(row - 1)
 	t.findCursor(true, row)
@@ -2427,15 +2427,15 @@ func (t *TextArea) handlePasteEvent(event *PasteEvent) Command {
 	return nil
 }
 
-// HandleEvent handles input events for this primitive.
-func (t *TextArea) HandleEvent(event tcell.Event) Command {
-	switch event := event.(type) {
-	case *KeyEvent:
-		return t.handleKeyEvent(event)
-	case *MouseEvent:
-		return t.handleMouseEvent(event)
-	case *PasteEvent:
-		return t.handlePasteEvent(event)
+// Update handles input events for this model.
+func (t *TextArea) Update(msg Msg) Cmd {
+	switch msg := msg.(type) {
+	case *KeyMsg:
+		return t.handleKeyMsg(msg)
+	case *MouseMsg:
+		return t.handleMouseMsg(msg)
+	case *PasteMsg:
+		return t.handlePasteMsg(msg)
 	}
 	return nil
 }

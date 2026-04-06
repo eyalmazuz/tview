@@ -87,8 +87,8 @@ func (i *InputField) GetLabel() string {
 	return i.textArea.GetLabel()
 }
 
-// SetLabelWidth sets the screen width of the label. A value of 0 will cause the
-// primitive to use the width of the label string.
+// SetLabelWidth sets the screen width of the label.
+// A value of 0 represents the width of the label string.
 func (i *InputField) SetLabelWidth(width int) *InputField {
 	if i.textArea.GetLabelWidth() != width {
 		i.textArea.SetLabelWidth(width)
@@ -155,12 +155,12 @@ func (i *InputField) SetFieldWidth(width int) *InputField {
 	return i
 }
 
-// GetFieldWidth returns this primitive's field width.
+// GetFieldWidth returns this model's field width.
 func (i *InputField) GetFieldWidth() int {
 	return i.fieldWidth
 }
 
-// GetFieldHeight returns this primitive's field height.
+// GetFieldHeight returns this model's field height.
 func (i *InputField) GetFieldHeight() int {
 	return 1
 }
@@ -222,8 +222,8 @@ func (i *InputField) SetFinishedFunc(handler func(key tcell.Key)) FormItem {
 	return i
 }
 
-// Focus is called when this primitive receives focus.
-func (i *InputField) Focus(delegate func(p Primitive)) {
+// Focus is called when this model receives focus.
+func (i *InputField) Focus(delegate func(m Model)) {
 	// If we're part of a form and this item is disabled, there's nothing the
 	// user can do here so we're finished.
 	if i.finished != nil && i.textArea.GetDisabled() {
@@ -234,23 +234,23 @@ func (i *InputField) Focus(delegate func(p Primitive)) {
 	i.Box.Focus(delegate)
 }
 
-// HasFocus returns whether or not this primitive has focus.
+// HasFocus returns whether or not this model has focus.
 func (i *InputField) HasFocus() bool {
 	return i.textArea.HasFocus() || i.Box.HasFocus()
 }
 
-// Blur is called when this primitive loses focus.
+// Blur is called when this model loses focus.
 func (i *InputField) Blur() {
 	i.textArea.Blur()
 	i.Box.Blur()
 }
 
-// Draw draws this primitive onto the screen.
+// Draw draws this model onto the screen.
 func (i *InputField) Draw(screen tcell.Screen) {
 	i.DrawForSubclass(screen, i)
 
 	// Prepare
-	x, y, width, height := i.GetInnerRect()
+	x, y, width, height := i.InnerRect()
 	if height < 1 || width < 1 {
 		return
 	}
@@ -272,14 +272,14 @@ func (i *InputField) Draw(screen tcell.Screen) {
 	i.textArea.Draw(screen)
 }
 
-// HandleEvent handles input events for this primitive.
-func (i *InputField) HandleEvent(event tcell.Event) Command {
+// Update handles input events for this model.
+func (i *InputField) Update(msg Msg) Cmd {
 	if i.textArea.GetDisabled() {
 		return nil
 	}
 
-	switch event := event.(type) {
-	case *KeyEvent:
+	switch msg := msg.(type) {
+	case *KeyMsg:
 		// Finish up.
 		finish := func(key tcell.Key) {
 			if i.done != nil {
@@ -291,32 +291,32 @@ func (i *InputField) HandleEvent(event tcell.Event) Command {
 		}
 
 		// Process special key events for the input field.
-		switch key := event.Key(); key {
+		switch key := msg.Key(); key {
 		case tcell.KeyEnter, tcell.KeyEscape, tcell.KeyTab, tcell.KeyBacktab:
 			finish(key)
 			return nil
 		default:
 			// Forward other key events to the text area.
-			return i.textArea.HandleEvent(event)
+			return i.textArea.Update(msg)
 		}
-	case *MouseEvent:
+	case *MouseMsg:
 		// Is mouse event within the input field?
-		x, y := event.Position()
+		x, y := msg.Position()
 		if !i.InRect(x, y) {
 			return nil
 		}
 
 		// Forward mouse event to the text area.
-		cmd := i.textArea.HandleEvent(event)
+		cmd := i.textArea.Update(msg)
 
 		// Focus in any case.
-		if event.Action == MouseLeftDown && cmd == nil {
+		if msg.Action == MouseLeftDown && cmd == nil {
 			cmd = SetFocus(i)
 		}
 		return cmd
-	case *PasteEvent:
+	case *PasteMsg:
 		// Forward the pasted text to the text area.
-		return i.textArea.HandleEvent(event)
+		return i.textArea.Update(msg)
 	}
 	return nil
 }

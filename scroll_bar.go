@@ -175,6 +175,31 @@ func (s *ScrollBar) SetScrollStep(step int) *ScrollBar {
 	return s
 }
 
+// ScrollStep returns scroll step used by wheel and arrow interactions.
+func (s *ScrollBar) ScrollStep() int {
+	return s.scrollStep
+}
+
+// TrackClickBehavior returns behavior used for track clicks.
+func (s *ScrollBar) TrackClickBehavior() TrackClickBehavior {
+	return s.trackClickBehavior
+}
+
+// HasStartArrow reports whether a start arrow is rendered.
+func (s *ScrollBar) HasStartArrow() bool {
+	return s.arrows.hasStart()
+}
+
+// HasEndArrow reports whether an end arrow is rendered.
+func (s *ScrollBar) HasEndArrow() bool {
+	return s.arrows.hasEnd()
+}
+
+// TrackLengthExcludingArrowHeads returns track length excluding arrow cells.
+func (s *ScrollBar) TrackLengthExcludingArrowHeads(length int) int {
+	return s.trackLengthExcludingArrowHeads(length)
+}
+
 // SetAutoHide controls whether the scrollBar is hidden when there is nothing to scroll.
 func (s *ScrollBar) SetAutoHide(autoHide bool) *ScrollBar {
 	if s.autoHide != autoHide {
@@ -336,7 +361,7 @@ func (s *ScrollBar) put(screen tcell.Screen, x, y, index int, glyph string, styl
 func (s *ScrollBar) Draw(screen tcell.Screen) {
 	s.DrawForSubclass(screen, s)
 
-	x, y, _, height := s.GetInnerRect()
+	x, y, _, height := s.InnerRect()
 	if height <= 0 {
 		return
 	}
@@ -364,4 +389,4 @@ func (s *ScrollBar) Draw(screen tcell.Screen) {
 	}
 }
 
-var _ Primitive = &ScrollBar{}
+var _ Model = &ScrollBar{}
