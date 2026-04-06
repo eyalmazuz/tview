@@ -1,4 +1,4 @@
-module github.com/ayn2op/tview
+module github.com/eyalmazuz/tview
 
 go 1.25.3
 
