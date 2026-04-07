@@ -142,6 +142,8 @@ func normalizePrimaryKey(key string) string {
 	}
 
 	switch strings.ToLower(key) {
+	case "space", " ":
+		return "space"
 	case "esc", "escape":
 		return "esc"
 	case "return":
@@ -190,7 +192,11 @@ func keyMsgString(msg *KeyMsg) string {
 
 	primary := keyName(key)
 	if primary == "" && key == tcell.KeyRune {
-		primary = msg.Str()
+		if msg.Str() == " " {
+			primary = "space"
+		} else {
+			primary = msg.Str()
+		}
 	}
 	if primary == "" {
 		return normalizeKey(msg.Name())
