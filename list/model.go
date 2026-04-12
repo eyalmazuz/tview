@@ -30,6 +30,7 @@ type Model struct {
 	snapToItems  bool
 	centerCursor bool
 	trackEnd     bool
+	alignBottom  bool
 	atEnd        bool
 
 	cursor int
@@ -217,6 +218,12 @@ func (l *Model) SetTrackEnd(track bool) *Model {
 	if l.trackEnd != track {
 		l.trackEnd = track
 	}
+	return l
+}
+
+// SetAlignBottom determines whether the items should be aligned to the bottom when they don't fill the screen.
+func (l *Model) SetAlignBottom(align bool) *Model {
+	l.alignBottom = align
 	return l
 }
 
@@ -511,6 +518,18 @@ rebuild:
 		}
 	}
 
+	// When alignBottom is true, force items to the bottom of the viewport if they don't fill it.
+	if l.alignBottom && endReached {
+		last := children[len(children)-1]
+		bottom := last.row + last.height
+		if bottom < height {
+			adj := height - bottom
+			for i := range children {
+				children[i].row += adj
+			}
+		}
+	}
+
 	// When scrolling down at the end, clamp so the last item aligns to the bottom.
 	if endReached && pendingDelta > 0 {
 		last := children[len(children)-1]
@@ -547,6 +566,7 @@ rebuild:
 		l.scroll.offset = 0
 	} else {
 		// Non-snap mode keeps the first partially visible item as the top anchor.
+		foundAnchor := false
 		for i := range children {
 			child := children[i]
 			span := child.height
@@ -556,8 +576,13 @@ rebuild:
 			if child.row <= 0 && child.row+span > 0 {
 				l.scroll.top = child.index
 				l.scroll.offset = -child.row
+				foundAnchor = true
 				break
 			}
+		}
+		if !foundAnchor && len(children) > 0 {
+			l.scroll.top = children[0].index
+			l.scroll.offset = -children[0].row
 		}
 	}
 
