@@ -31,6 +31,7 @@ type Model struct {
 	centerCursor bool
 	trackEnd     bool
 	alignBottom  bool
+	firstItemRow int
 	atEnd        bool
 
 	cursor int
@@ -222,6 +223,11 @@ func (l *Model) SetTrackEnd(track bool) *Model {
 }
 
 // SetAlignBottom determines whether the items should be aligned to the bottom when they don't fill the screen.
+// FirstItemRow returns the row of the first item in the viewport.
+func (l *Model) FirstItemRow() int {
+	return l.firstItemRow
+}
+
 func (l *Model) SetAlignBottom(align bool) *Model {
 	l.alignBottom = align
 	return l
@@ -519,7 +525,7 @@ rebuild:
 	}
 
 	// When alignBottom is true, force items to the bottom of the viewport if they don't fill it.
-	if l.alignBottom && endReached {
+	if l.alignBottom && endReached && children[0].index == 0 {
 		last := children[len(children)-1]
 		bottom := last.row + last.height
 		if bottom < height {
@@ -593,6 +599,11 @@ rebuild:
 	l.atEnd = endReached && last.row+last.height <= height
 
 	l.setLastDraw(children)
+	if len(children) > 0 {
+		l.firstItemRow = children[0].row
+	} else {
+		l.firstItemRow = 0
+	}
 	l.lastRect = rect{x: x, y: y, width: width, height: height}
 
 	clipped := newClippedScreen(screen, x, y, width, height)
