@@ -345,8 +345,8 @@ func (l *Model) setLastDraw(children []drawnItem) {
 	l.lastDraw = children
 }
 
-// Draw draws this model onto the screen.
-func (l *Model) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (l *Model) View(screen tcell.Screen) {
 	l.DrawForSubclass(screen, l)
 	l.scrollBarInteraction.state = listScrollBarState{}
 
@@ -573,7 +573,7 @@ rebuild:
 	clipped := newClippedScreen(screen, x, y, width, height)
 	for _, child := range children {
 		child.item.SetRect(x, y+child.row, usableWidth, child.height)
-		child.item.Draw(clipped)
+		child.item.View(clipped)
 	}
 
 	if drawScrollBar {
@@ -592,7 +592,7 @@ rebuild:
 			ViewportLen: scrollBarState.viewportLength,
 		})
 		l.scrollBar.SetOffset(scrollBarState.position)
-		l.scrollBar.Draw(screen)
+		l.scrollBar.View(screen)
 	}
 }
 

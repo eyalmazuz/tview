@@ -245,8 +245,8 @@ func (i *InputField) Blur() {
 	i.Box.Blur()
 }
 
-// Draw draws this model onto the screen.
-func (i *InputField) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (i *InputField) View(screen tcell.Screen) {
 	i.DrawForSubclass(screen, i)
 
 	// Prepare
@@ -269,7 +269,7 @@ func (i *InputField) Draw(screen tcell.Screen) {
 
 	// Draw text area.
 	i.textArea.hasFocus = i.HasFocus() // Force cursor positioning.
-	i.textArea.Draw(screen)
+	i.textArea.View(screen)
 }
 
 // Update handles input events for this model.

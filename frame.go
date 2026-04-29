@@ -107,8 +107,8 @@ func (f *Frame) SetBorders(top, bottom, header, footer, left, right int) *Frame 
 	return f
 }
 
-// Draw draws this model onto the screen.
-func (f *Frame) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (f *Frame) View(screen tcell.Screen) {
 	f.DrawForSubclass(screen, f)
 
 	// Calculate start positions.
@@ -167,7 +167,7 @@ func (f *Frame) Draw(screen tcell.Screen) {
 		f.primitive.SetRect(x, top, width, bottom+1-top)
 
 		// Finally, draw the contained model.
-		f.primitive.Draw(screen)
+		f.primitive.View(screen)
 	}
 }
 

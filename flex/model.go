@@ -152,8 +152,8 @@ func (m *Model) ResizeItem(p tview.Model, fixedSize, proportion int) *Model {
 	return m
 }
 
-// Draw draws this model onto the screen.
-func (m *Model) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (m *Model) View(screen tcell.Screen) {
 	m.DrawForSubclass(screen, m)
 
 	// Calculate size and position of the items.
@@ -206,9 +206,9 @@ func (m *Model) Draw(screen tcell.Screen) {
 
 		if item.Item != nil {
 			if item.Item.HasFocus() {
-				defer item.Item.Draw(screen)
+				defer item.Item.View(screen)
 			} else {
-				item.Item.Draw(screen)
+				item.Item.View(screen)
 			}
 		}
 	}

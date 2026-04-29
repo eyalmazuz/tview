@@ -456,8 +456,8 @@ func (f *Form) GetFocusedItemIndex() (formItem, button int) {
 	return -1, index - len(f.items)
 }
 
-// Draw draws this model onto the screen.
-func (f *Form) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (f *Form) View(screen tcell.Screen) {
 	f.DrawForSubclass(screen, f)
 
 	// Determine the dimensions.
@@ -632,9 +632,9 @@ func (f *Form) Draw(screen tcell.Screen) {
 
 		// Draw items with focus last (in case of overlaps).
 		if item.HasFocus() {
-			defer item.Draw(screen)
+			defer item.View(screen)
 		} else {
-			item.Draw(screen)
+			item.View(screen)
 		}
 	}
 
@@ -652,7 +652,7 @@ func (f *Form) Draw(screen tcell.Screen) {
 		}
 
 		// Draw button.
-		button.Draw(screen)
+		button.View(screen)
 	}
 }
 

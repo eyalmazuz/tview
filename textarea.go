@@ -1173,8 +1173,8 @@ func (t *TextArea) replace(deleteStart, deleteEnd [3]int, insert string, continu
 	return deleteEnd
 }
 
-// Draw draws this model onto the screen.
-func (t *TextArea) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (t *TextArea) View(screen tcell.Screen) {
 	t.DrawForSubclass(screen, t)
 
 	// Prepare
@@ -1337,7 +1337,7 @@ func (t *TextArea) drawPlaceholder(screen tcell.Screen, x, y, width, height int)
 	// wrapping etc.
 	textView := NewTextView().SetLines([]Line{t.placeholder})
 	textView.SetRect(x, y, width, height)
-	textView.Draw(screen)
+	textView.View(screen)
 }
 
 // reset resets many of the local variables of the text area because they cannot
@@ -1462,7 +1462,7 @@ func (t *TextArea) truncateLines(fromLine int) {
 // (=unknown) but only its span position ("pos" value) is known. If the cursor
 // position is already known (row >= 0), it can also be used to modify row and
 // column offsets such that the cursor is visible during the next call to
-// [TextArea.Draw], by setting "clamp" to true.
+// [TextArea.View], by setting "clamp" to true.
 //
 // To determine the cursor position, "startRow" helps reduce processing time by
 // indicating the lowest row in which searching should start. Set this to 0 if
@@ -1685,7 +1685,7 @@ func (t *TextArea) step(text string, pos, endPos [3]int) (cluster, rest string, 
 // corner of the text area's full text (visible or not). The column value may be
 // negative, in which case, the cursor will be placed at the end of the line.
 // The cursor's actual position will be aligned with a grapheme cluster
-// boundary. The next call to [TextArea.Draw] will attempt to keep the cursor in
+// boundary. The next call to [TextArea.View] will attempt to keep the cursor in
 // the viewport.
 func (t *TextArea) moveCursor(row, column int) {
 	// Are we within the range of rows?
@@ -1738,7 +1738,7 @@ func (t *TextArea) moveCursor(row, column int) {
 // moveWordRight moves the cursor to the end of the current or next word. If
 // after is set to true, the cursor will be placed after the word. If false, the
 // cursor will be placed on the last character of the word. If clamp is set to
-// true, the cursor will be visible during the next call to [TextArea.Draw].
+// true, the cursor will be visible during the next call to [TextArea.View].
 func (t *TextArea) moveWordRight(after, clamp bool) {
 	// Because we rely on clampToCursor to calculate the new screen position,
 	// this is an expensive operation for large texts.
@@ -1774,7 +1774,7 @@ func (t *TextArea) moveWordRight(after, clamp bool) {
 
 // moveWordLeft moves the cursor to the beginning of the current or previous
 // word. If clamp is true, the cursor will be visible during the next call to
-// [TextArea.Draw].
+// [TextArea.View].
 func (t *TextArea) moveWordLeft(clamp bool) {
 	// We go back row by row, trying to find the last word boundary before the
 	// cursor.

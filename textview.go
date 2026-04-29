@@ -737,8 +737,8 @@ func (t *TextView) cellWidth(cell textViewCell, leftPos int) int {
 	return cell.width
 }
 
-// Draw draws this model onto the screen.
-func (t *TextView) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (t *TextView) View(screen tcell.Screen) {
 	t.DrawForSubclass(screen, t)
 	t.Lock()
 	defer t.Unlock()

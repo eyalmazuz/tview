@@ -149,7 +149,8 @@ func (b *Box) SetRect(x, y, width, height int) {
 	}
 }
 
-// Update handles input events for this model.
+var _ Model = (*Box)(nil)
+
 func (b *Box) Update(msg Msg) Cmd {
 	switch msg := msg.(type) {
 	case MouseMsg:
@@ -158,6 +159,10 @@ func (b *Box) Update(msg Msg) Cmd {
 		}
 	}
 	return nil
+}
+
+func (b *Box) View(screen tcell.Screen) {
+	b.DrawForSubclass(screen, b)
 }
 
 // InRect returns true if the given coordinate is within the bounds of the box's
@@ -289,11 +294,6 @@ func (b *Box) SetFooterAlignment(alignment Alignment) *Box {
 		b.footerAlignment = alignment
 	}
 	return b
-}
-
-// Draw draws this model onto the screen.
-func (b *Box) Draw(screen tcell.Screen) {
-	b.DrawForSubclass(screen, b)
 }
 
 // DrawForSubclass draws this box under the assumption that model p is a

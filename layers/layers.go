@@ -349,8 +349,8 @@ func (l *Layers) Focus(delegate func(m tview.Model)) {
 	l.Box.Focus(delegate)
 }
 
-// Draw draws this model onto the screen.
-func (l *Layers) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (l *Layers) View(screen tcell.Screen) {
 	l.DrawForSubclass(screen, l)
 
 	overlayIndex := l.topVisibleEnabledOverlayIndex()
@@ -372,7 +372,7 @@ func (l *Layers) Draw(screen tcell.Screen) {
 			x, y, width, height := l.InnerRect()
 			layer.item.SetRect(x, y, width, height)
 		}
-		layer.item.Draw(layerScreen)
+		layer.item.View(layerScreen)
 	}
 }
 

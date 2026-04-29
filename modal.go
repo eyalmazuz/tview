@@ -123,8 +123,8 @@ func (m *Modal) HasFocus() bool {
 	return m.form.HasFocus()
 }
 
-// Draw draws this model onto the screen.
-func (m *Modal) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (m *Modal) View(screen tcell.Screen) {
 	// Calculate the width of this modal.
 	buttonsWidth := 0
 	for _, button := range m.form.buttons {
@@ -153,7 +153,7 @@ func (m *Modal) Draw(screen tcell.Screen) {
 	m.DrawForSubclass(screen, m)
 	x, y, width, height = m.InnerRect()
 	m.frame.SetRect(x, y, width, height)
-	m.frame.Draw(screen)
+	m.frame.View(screen)
 }
 
 // Update handles input events for this model.

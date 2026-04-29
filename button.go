@@ -133,8 +133,8 @@ func (b *Button) GetDisabled() bool {
 	return b.disabled
 }
 
-// Draw draws this model onto the screen.
-func (b *Button) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (b *Button) View(screen tcell.Screen) {
 	// Draw the box.
 	style := b.style
 	if b.disabled {

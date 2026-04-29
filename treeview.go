@@ -414,7 +414,7 @@ func (t *TreeView) GetRoot() *TreeNode {
 //
 // This function does NOT trigger the "changed" callback because the actual node
 // that will be selected is not known until the tree is drawn. Triggering the
-// "changed" callback is thus deferred until the next call to [TreeView.Draw].
+// "changed" callback is thus deferred until the next call to [TreeView.View].
 func (t *TreeView) SetCurrentNode(node *TreeNode) *TreeView {
 	if t.currentNode != node {
 		t.currentNode = node
@@ -580,8 +580,8 @@ func (t *TreeView) Move(offset int) *TreeView {
 
 // process builds the visible tree, populates the "nodes" slice, and processes
 // pending movement actions. Set "drawingAfter" to true if you know that
-// [TreeView.Draw] will be called immediately after this function (to avoid
-// having [TreeView.Draw] call it again).
+// [TreeView.View] will be called immediately after this function (to avoid
+// having [TreeView.View] call it again).
 func (t *TreeView) process(drawingAfter bool) {
 	t.stableNodes = drawingAfter
 	_, _, _, height := t.InnerRect()
@@ -746,8 +746,8 @@ func (t *TreeView) process(drawingAfter bool) {
 	t.lastNode = t.currentNode
 }
 
-// Draw draws this model onto the screen.
-func (t *TreeView) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (t *TreeView) View(screen tcell.Screen) {
 	t.DrawForSubclass(screen, t)
 	if t.root == nil {
 		return

@@ -269,8 +269,8 @@ func (c *Checkbox) Focus(delegate func(m Model)) {
 	c.Box.Focus(delegate)
 }
 
-// Draw draws this model onto the screen.
-func (c *Checkbox) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (c *Checkbox) View(screen tcell.Screen) {
 	c.DrawForSubclass(screen, c)
 
 	// Prepare

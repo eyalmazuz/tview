@@ -133,7 +133,7 @@ func (m *Model) Update(msg tview.Msg) tview.Cmd {
 	return m.tabs[m.active].Update(msg)
 }
 
-func (m *Model) Draw(screen tcell.Screen) {
+func (m *Model) View(screen tcell.Screen) {
 	m.DrawForSubclass(screen, m)
 
 	if len(m.tabs) == 0 {
@@ -160,7 +160,7 @@ func (m *Model) Draw(screen tcell.Screen) {
 		height--
 
 		content.SetRect(x, y, width, height)
-		content.Draw(screen)
+		content.View(screen)
 	}
 }
 

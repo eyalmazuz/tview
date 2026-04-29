@@ -251,12 +251,7 @@ func (a *Application) handleEvents() {
 	a.Lock()
 	screen := a.screen
 	a.Unlock()
-	if screen == nil {
-		return
-	}
-
-	events := screen.EventQ()
-	for event := range events {
+	for event := range screen.EventQ() {
 		a.queueMsg(event)
 	}
 }
@@ -482,7 +477,7 @@ func (a *Application) draw() *Application {
 	if forceRedraw {
 		screen.Clear()
 	}
-	root.Draw(screen)
+	root.View(screen)
 	screen.Show()
 
 	a.Lock()

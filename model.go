@@ -4,12 +4,10 @@ import "github.com/gdamore/tcell/v3"
 
 // Model is the top-most interface for all graphical models.
 type Model interface {
-	// Draw draws this model onto the screen. Implementers can call the
-	// screen's ShowCursor() function but should only do so when they have focus.
-	// (They will need to keep track of this themselves.)
-	Draw(tcell.Screen)
 	// Update receives messages when this model has focus.
 	Update(Msg) Cmd
+	// View draws this model onto the screen.
+	View(tcell.Screen)
 
 	// Rect returns the current position of the model, x, y, width, and
 	// height.

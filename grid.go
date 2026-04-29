@@ -322,8 +322,8 @@ func (g *Grid) HasFocus() bool {
 	return g.Box.HasFocus()
 }
 
-// Draw draws this model onto the screen.
-func (g *Grid) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (g *Grid) View(screen tcell.Screen) {
 	g.DrawForSubclass(screen, g)
 	x, y, width, height := g.InnerRect()
 	screenWidth, screenHeight := screen.Size()
@@ -628,9 +628,9 @@ ItemLoop:
 
 		// Draw model.
 		if item == focus {
-			defer item.Item.Draw(screen)
+			defer item.Item.View(screen)
 		} else {
-			item.Item.Draw(screen)
+			item.Item.View(screen)
 		}
 
 		// Draw border around model.
