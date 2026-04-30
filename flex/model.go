@@ -239,7 +239,8 @@ func (m *Model) HasFocus() bool {
 func (m *Model) Update(msg tview.Msg) tview.Cmd {
 	switch msg := msg.(type) {
 	case tview.MouseMsg:
-		if !m.InRect(msg.Position()) {
+		x, y := msg.Position()
+		if !m.InRect(x, y) {
 			return nil
 		}
 
@@ -248,9 +249,8 @@ func (m *Model) Update(msg tview.Msg) tview.Cmd {
 			if item.Item == nil {
 				continue
 			}
-			childCmds := item.Item.Update(msg)
-			if childCmds != nil {
-				return childCmds
+			if modelInRect(item.Item, x, y) {
+				return item.Item.Update(msg)
 			}
 		}
 		return nil
@@ -263,4 +263,9 @@ func (m *Model) Update(msg tview.Msg) tview.Cmd {
 		}
 	}
 	return nil
+}
+
+func modelInRect(m tview.Model, x, y int) bool {
+	rectX, rectY, width, height := m.Rect()
+	return x >= rectX && x < rectX+width && y >= rectY && y < rectY+height
 }

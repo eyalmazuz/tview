@@ -138,3 +138,8 @@ func printWithStyle(screen tcell.Screen, text string, x, y, skipWidth, maxWidth 
 func PrintSimple(screen tcell.Screen, text string, x, y int) {
 	Print(screen, text, x, y, math.MaxInt32, AlignmentLeft, Styles.PrimaryTextColor)
 }
+
+func modelInRect(m Model, x, y int) bool {
+	rectX, rectY, width, height := m.Rect()
+	return x >= rectX && x < rectX+width && y >= rectY && y < rectY+height
+}

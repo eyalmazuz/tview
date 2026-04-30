@@ -193,16 +193,14 @@ func (f *Frame) HasFocus() bool {
 func (f *Frame) Update(msg Msg) Cmd {
 	switch msg := msg.(type) {
 	case MouseMsg:
-		if !f.InRect(msg.Position()) {
+		x, y := msg.Position()
+		if !f.InRect(x, y) {
 			return nil
 		}
 
 		// Pass mouse events on to contained model.
-		if f.primitive != nil {
-			childCmds := f.primitive.Update(msg)
-			if childCmds != nil {
-				return childCmds
-			}
+		if f.primitive != nil && modelInRect(f.primitive, x, y) {
+			return f.primitive.Update(msg)
 		}
 
 		// Clicking on the frame parts.

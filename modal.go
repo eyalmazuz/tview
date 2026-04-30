@@ -172,12 +172,13 @@ func (m *Modal) Update(msg Msg) Cmd {
 	case ButtonExitMsg:
 		return m.form.Update(msg)
 	case MouseMsg:
-		// Pass mouse events on to the form.
-		cmd := m.form.Update(msg)
-		if cmd == nil && msg.Action == MouseLeftDown && m.InRect(msg.Position()) {
-			cmd = SetFocus(m)
+		x, y := msg.Position()
+		if m.form.InRect(x, y) {
+			return m.form.Update(msg)
 		}
-		return cmd
+		if msg.Action == MouseLeftDown && m.InRect(x, y) {
+			return SetFocus(m)
+		}
 	case KeyMsg:
 		// Keep arrow-key navigation between modal buttons.
 		switch msg.Key() {

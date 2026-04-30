@@ -946,7 +946,7 @@ func (l *Model) Update(msg tview.Msg) tview.Cmd {
 				if l.startScrollBarDrag(row, innerHeight, contentWidth) {
 					return tview.Batch(cmd, tview.SetMouseCapture(l))
 				}
-				return nil
+				return cmd
 			case tview.MouseLeftClick:
 				if l.scrollBarInteraction.dragMoved {
 					l.scrollBarInteraction.dragMoved = false

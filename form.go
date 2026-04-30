@@ -780,21 +780,21 @@ func (f *Form) Update(msg Msg) Cmd {
 		f.finished(msg.Key)
 		return f.consumeCancelMsg(nil)
 	case MouseMsg:
+		x, y := msg.Position()
 		// Determine items to pass mouse events to.
 		for _, item := range f.items {
 			if item.GetDisabled() {
 				continue
 			}
-			childCmds := item.Update(msg)
-			if childCmds != nil {
-				return f.consumeCancelMsg(childCmds)
+			if modelInRect(item, x, y) {
+				return f.consumeCancelMsg(item.Update(msg))
 			}
 		}
 		for index, button := range f.buttons {
 			if button.GetDisabled() {
 				continue
 			}
-			if !button.InRect(msg.Position()) {
+			if !button.InRect(x, y) {
 				continue
 			}
 			switch msg.Action {
@@ -810,15 +810,12 @@ func (f *Form) Update(msg Msg) Cmd {
 					nil,
 				)
 			default:
-				childCmds := button.Update(msg)
-				if childCmds != nil {
-					return f.consumeCancelMsg(childCmds)
-				}
+				return f.consumeCancelMsg(button.Update(msg))
 			}
 		}
 
 		// A mouse down anywhere else will focus this form.
-		if msg.Action == MouseLeftDown && f.InRect(msg.Position()) {
+		if msg.Action == MouseLeftDown && f.InRect(x, y) {
 			return SetFocus(f)
 		}
 	case KeyMsg, PasteMsg:

@@ -151,15 +151,7 @@ func (b *Box) SetRect(x, y, width, height int) {
 
 var _ Model = (*Box)(nil)
 
-func (b *Box) Update(msg Msg) Cmd {
-	switch msg := msg.(type) {
-	case MouseMsg:
-		if msg.Action == MouseLeftDown && b.InRect(msg.Position()) {
-			return SetFocus(b)
-		}
-	}
-	return nil
-}
+func (b *Box) Update(msg Msg) Cmd { return nil }
 
 func (b *Box) View(screen tcell.Screen) {
 	b.DrawForSubclass(screen, b)
@@ -168,8 +160,7 @@ func (b *Box) View(screen tcell.Screen) {
 // InRect returns true if the given coordinate is within the bounds of the box's
 // rectangle.
 func (b *Box) InRect(x, y int) bool {
-	rectX, rectY, width, height := b.Rect()
-	return x >= rectX && x < rectX+width && y >= rectY && y < rectY+height
+	return modelInRect(b, x, y)
 }
 
 // InInnerRect returns true if the given coordinate is within the bounds of the

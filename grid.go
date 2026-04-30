@@ -685,17 +685,18 @@ ItemLoop:
 func (g *Grid) Update(msg Msg) Cmd {
 	switch msg := msg.(type) {
 	case MouseMsg:
-		if !g.InRect(msg.Position()) {
+		x, y := msg.Position()
+		if !g.InRect(x, y) {
 			return nil
 		}
 
 		// Pass mouse events along to the first child item that takes it.
 		for _, item := range g.items {
-			if item.Item == nil {
+			if item.Item == nil || !item.visible {
 				continue
 			}
-			if cmd := item.Item.Update(msg); cmd != nil {
-				return cmd
+			if modelInRect(item.Item, x, y) {
+				return item.Item.Update(msg)
 			}
 		}
 	case KeyMsg:
