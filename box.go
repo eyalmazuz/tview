@@ -160,7 +160,7 @@ func (b *Box) View(screen tcell.Screen) {
 // InRect returns true if the given coordinate is within the bounds of the box's
 // rectangle.
 func (b *Box) InRect(x, y int) bool {
-	return modelInRect(b, x, y)
+	return ModelInRect(b, x, y)
 }
 
 // InInnerRect returns true if the given coordinate is within the bounds of the

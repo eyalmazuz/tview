@@ -249,7 +249,7 @@ func (m *Model) Update(msg tview.Msg) tview.Cmd {
 			if item.Item == nil {
 				continue
 			}
-			if modelInRect(item.Item, x, y) {
+			if tview.ModelInRect(item.Item, x, y) {
 				return item.Item.Update(msg)
 			}
 		}
@@ -263,9 +263,4 @@ func (m *Model) Update(msg tview.Msg) tview.Cmd {
 		}
 	}
 	return nil
-}
-
-func modelInRect(m tview.Model, x, y int) bool {
-	rectX, rectY, width, height := m.Rect()
-	return x >= rectX && x < rectX+width && y >= rectY && y < rectY+height
 }

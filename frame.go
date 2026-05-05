@@ -199,7 +199,7 @@ func (f *Frame) Update(msg Msg) Cmd {
 		}
 
 		// Pass mouse events on to contained model.
-		if f.primitive != nil && modelInRect(f.primitive, x, y) {
+		if f.primitive != nil && ModelInRect(f.primitive, x, y) {
 			return f.primitive.Update(msg)
 		}
 

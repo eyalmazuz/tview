@@ -786,7 +786,7 @@ func (f *Form) Update(msg Msg) Cmd {
 			if item.GetDisabled() {
 				continue
 			}
-			if modelInRect(item, x, y) {
+			if ModelInRect(item, x, y) {
 				return f.consumeCancelMsg(item.Update(msg))
 			}
 		}

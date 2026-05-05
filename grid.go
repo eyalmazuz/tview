@@ -695,7 +695,7 @@ func (g *Grid) Update(msg Msg) Cmd {
 			if item.Item == nil || !item.visible {
 				continue
 			}
-			if modelInRect(item.Item, x, y) {
+			if ModelInRect(item.Item, x, y) {
 				return item.Item.Update(msg)
 			}
 		}
