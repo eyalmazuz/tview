@@ -247,7 +247,7 @@ func (i *InputField) Blur() {
 
 // View draws this model onto the screen.
 func (i *InputField) View(screen tcell.Screen) {
-	i.DrawForSubclass(screen, i)
+	i.Box.View(screen)
 
 	// Prepare
 	x, y, width, height := i.InnerRect()

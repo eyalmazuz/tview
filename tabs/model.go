@@ -134,7 +134,7 @@ func (m *Model) Update(msg tview.Msg) tview.Cmd {
 }
 
 func (m *Model) View(screen tcell.Screen) {
-	m.DrawForSubclass(screen, m)
+	m.Box.View(screen)
 
 	if len(m.tabs) == 0 {
 		return

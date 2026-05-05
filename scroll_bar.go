@@ -359,7 +359,7 @@ func (s *ScrollBar) put(screen tcell.Screen, x, y, index int, glyph string, styl
 
 // View draws the scrollBar.
 func (s *ScrollBar) View(screen tcell.Screen) {
-	s.DrawForSubclass(screen, s)
+	s.Box.View(screen)
 
 	x, y, _, height := s.InnerRect()
 	if height <= 0 {

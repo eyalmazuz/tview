@@ -1175,7 +1175,7 @@ func (t *TextArea) replace(deleteStart, deleteEnd [3]int, insert string, continu
 
 // View draws this model onto the screen.
 func (t *TextArea) View(screen tcell.Screen) {
-	t.DrawForSubclass(screen, t)
+	t.Box.View(screen)
 
 	// Prepare
 	x, y, width, height := t.InnerRect()

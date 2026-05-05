@@ -748,7 +748,7 @@ func (t *TreeView) process(drawingAfter bool) {
 
 // View draws this model onto the screen.
 func (t *TreeView) View(screen tcell.Screen) {
-	t.DrawForSubclass(screen, t)
+	t.Box.View(screen)
 	if t.root == nil {
 		return
 	}

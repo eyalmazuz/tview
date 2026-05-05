@@ -458,7 +458,7 @@ func (f *Form) GetFocusedItemIndex() (formItem, button int) {
 
 // View draws this model onto the screen.
 func (f *Form) View(screen tcell.Screen) {
-	f.DrawForSubclass(screen, f)
+	f.Box.View(screen)
 
 	// Determine the dimensions.
 	x, y, width, height := f.InnerRect()

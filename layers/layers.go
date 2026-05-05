@@ -351,7 +351,7 @@ func (l *Layers) Focus(delegate func(m tview.Model)) {
 
 // View draws this model onto the screen.
 func (l *Layers) View(screen tcell.Screen) {
-	l.DrawForSubclass(screen, l)
+	l.Box.View(screen)
 
 	overlayIndex := l.topVisibleEnabledOverlayIndex()
 	var ovScreen *overlayScreen

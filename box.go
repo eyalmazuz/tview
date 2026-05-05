@@ -154,7 +154,97 @@ var _ Model = (*Box)(nil)
 func (b *Box) Update(msg Msg) Cmd { return nil }
 
 func (b *Box) View(screen tcell.Screen) {
-	b.DrawForSubclass(screen, b)
+	// Don't draw anything if there is no space.
+	if b.width <= 0 || b.height <= 0 {
+		return
+	}
+
+	// Fill background.
+	background := tcell.StyleDefault.Background(b.backgroundColor)
+	if !b.dontClear {
+		for y := b.y; y < b.y+b.height; y++ {
+			for x := b.x; x < b.x+b.width; x++ {
+				screen.Put(x, y, " ", background)
+			}
+		}
+	}
+
+	// Draw border.
+	if b.borders != BordersNone && b.width >= 2 && b.height >= 2 {
+		if b.borders.Has(BordersTop) {
+			for x := b.x + 1; x < b.x+b.width-1; x++ {
+				screen.Put(x, b.y, b.borderSet.Top, b.borderStyle)
+			}
+		}
+
+		if b.borders.Has(BordersBottom) {
+			for x := b.x + 1; x < b.x+b.width-1; x++ {
+				screen.Put(x, b.y+b.height-1, b.borderSet.Bottom, b.borderStyle)
+			}
+		}
+
+		if b.borders.Has(BordersLeft) {
+			for y := b.y + 1; y < b.y+b.height-1; y++ {
+				screen.Put(b.x, y, b.borderSet.Left, b.borderStyle)
+			}
+		}
+
+		if b.borders.Has(BordersRight) {
+			for y := b.y + 1; y < b.y+b.height-1; y++ {
+				screen.Put(b.x+b.width-1, y, b.borderSet.Right, b.borderStyle)
+			}
+		}
+
+		if b.borders.Has(BordersTop | BordersLeft) {
+			screen.Put(b.x, b.y, b.borderSet.TopLeft, b.borderStyle)
+		}
+
+		if b.borders.Has(BordersTop | BordersRight) {
+			screen.Put(b.x+b.width-1, b.y, b.borderSet.TopRight, b.borderStyle)
+		}
+
+		if b.borders.Has(BordersBottom | BordersLeft) {
+			screen.Put(b.x, b.y+b.height-1, b.borderSet.BottomLeft, b.borderStyle)
+		}
+
+		if b.borders.Has(BordersBottom | BordersRight) {
+			screen.Put(b.x+b.width-1, b.y+b.height-1, b.borderSet.BottomRight, b.borderStyle)
+		}
+	}
+
+	// Draw title.
+	if b.title != "" && b.width >= 4 {
+		start, end, _ := printWithStyle(screen, b.title, b.x+1, b.y, 0, b.width-2, b.titleAlignment, b.titleStyle, true)
+		printed := end - start
+		if len(b.title)-printed > 0 && printed > 0 {
+			xEllipsis := b.x + b.width - 2
+			if b.titleAlignment == AlignmentRight {
+				xEllipsis = b.x + 1
+			}
+			_, style, _ := screen.Get(xEllipsis, b.y)
+			fg := style.GetForeground()
+			Print(screen, string(SemigraphicsHorizontalEllipsis), xEllipsis, b.y, 1, AlignmentLeft, fg)
+		}
+	}
+
+	// Draw footer.
+	if b.footer != "" && b.width >= 4 {
+		start, end, _ := printWithStyle(screen, b.footer, b.x+1, b.y+b.height-1, 0, b.width-2, b.footerAlignment, b.footerStyle, true)
+		printed := end - start
+		if len(b.footer)-printed > 0 && printed > 0 {
+			xEllipsis := b.x + b.width - 2
+			if b.footerAlignment == AlignmentRight {
+				xEllipsis = b.x + 1
+			}
+			_, style, _ := screen.Get(xEllipsis, b.y+b.height-1)
+			fg := style.GetForeground()
+			Print(screen, string(SemigraphicsHorizontalEllipsis), xEllipsis, b.y+b.height-1, 1, AlignmentLeft, fg)
+		}
+	}
+
+	// Remember the inner rect.
+	b.innerX = -1
+	b.innerX, b.innerY, b.innerWidth, b.innerHeight = b.InnerRect()
 }
 
 // InRect returns true if the given coordinate is within the bounds of the box's
@@ -285,106 +375,6 @@ func (b *Box) SetFooterAlignment(alignment Alignment) *Box {
 		b.footerAlignment = alignment
 	}
 	return b
-}
-
-// DrawForSubclass draws this box under the assumption that model p is a
-// subclass of this box. This is needed e.g. to draw proper box frames which
-// depend on the subclass's focus.
-//
-// Only call this function from your own custom models. It is not needed in
-// applications that have no custom models.
-func (b *Box) DrawForSubclass(screen tcell.Screen, p Model) {
-	// Don't draw anything if there is no space.
-	if b.width <= 0 || b.height <= 0 {
-		return
-	}
-
-	// Fill background.
-	background := tcell.StyleDefault.Background(b.backgroundColor)
-	if !b.dontClear {
-		for y := b.y; y < b.y+b.height; y++ {
-			for x := b.x; x < b.x+b.width; x++ {
-				screen.Put(x, y, " ", background)
-			}
-		}
-	}
-
-	// Draw border.
-	if b.borders != BordersNone && b.width >= 2 && b.height >= 2 {
-		if b.borders.Has(BordersTop) {
-			for x := b.x + 1; x < b.x+b.width-1; x++ {
-				screen.Put(x, b.y, b.borderSet.Top, b.borderStyle)
-			}
-		}
-
-		if b.borders.Has(BordersBottom) {
-			for x := b.x + 1; x < b.x+b.width-1; x++ {
-				screen.Put(x, b.y+b.height-1, b.borderSet.Bottom, b.borderStyle)
-			}
-		}
-
-		if b.borders.Has(BordersLeft) {
-			for y := b.y + 1; y < b.y+b.height-1; y++ {
-				screen.Put(b.x, y, b.borderSet.Left, b.borderStyle)
-			}
-		}
-
-		if b.borders.Has(BordersRight) {
-			for y := b.y + 1; y < b.y+b.height-1; y++ {
-				screen.Put(b.x+b.width-1, y, b.borderSet.Right, b.borderStyle)
-			}
-		}
-
-		if b.borders.Has(BordersTop | BordersLeft) {
-			screen.Put(b.x, b.y, b.borderSet.TopLeft, b.borderStyle)
-		}
-
-		if b.borders.Has(BordersTop | BordersRight) {
-			screen.Put(b.x+b.width-1, b.y, b.borderSet.TopRight, b.borderStyle)
-		}
-
-		if b.borders.Has(BordersBottom | BordersLeft) {
-			screen.Put(b.x, b.y+b.height-1, b.borderSet.BottomLeft, b.borderStyle)
-		}
-
-		if b.borders.Has(BordersBottom | BordersRight) {
-			screen.Put(b.x+b.width-1, b.y+b.height-1, b.borderSet.BottomRight, b.borderStyle)
-		}
-	}
-
-	// Draw title.
-	if b.title != "" && b.width >= 4 {
-		start, end, _ := printWithStyle(screen, b.title, b.x+1, b.y, 0, b.width-2, b.titleAlignment, b.titleStyle, true)
-		printed := end - start
-		if len(b.title)-printed > 0 && printed > 0 {
-			xEllipsis := b.x + b.width - 2
-			if b.titleAlignment == AlignmentRight {
-				xEllipsis = b.x + 1
-			}
-			_, style, _ := screen.Get(xEllipsis, b.y)
-			fg := style.GetForeground()
-			Print(screen, string(SemigraphicsHorizontalEllipsis), xEllipsis, b.y, 1, AlignmentLeft, fg)
-		}
-	}
-
-	// Draw footer.
-	if b.footer != "" && b.width >= 4 {
-		start, end, _ := printWithStyle(screen, b.footer, b.x+1, b.y+b.height-1, 0, b.width-2, b.footerAlignment, b.footerStyle, true)
-		printed := end - start
-		if len(b.footer)-printed > 0 && printed > 0 {
-			xEllipsis := b.x + b.width - 2
-			if b.footerAlignment == AlignmentRight {
-				xEllipsis = b.x + 1
-			}
-			_, style, _ := screen.Get(xEllipsis, b.y+b.height-1)
-			fg := style.GetForeground()
-			Print(screen, string(SemigraphicsHorizontalEllipsis), xEllipsis, b.y+b.height-1, 1, AlignmentLeft, fg)
-		}
-	}
-
-	// Remember the inner rect.
-	b.innerX = -1
-	b.innerX, b.innerY, b.innerWidth, b.innerHeight = b.InnerRect()
 }
 
 // SetFocusFunc sets a callback function which is invoked when this model

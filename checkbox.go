@@ -271,7 +271,7 @@ func (c *Checkbox) Focus(delegate func(m Model)) {
 
 // View draws this model onto the screen.
 func (c *Checkbox) View(screen tcell.Screen) {
-	c.DrawForSubclass(screen, c)
+	c.Box.View(screen)
 
 	// Prepare
 	x, y, width, height := c.InnerRect()

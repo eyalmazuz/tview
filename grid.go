@@ -324,7 +324,8 @@ func (g *Grid) HasFocus() bool {
 
 // View draws this model onto the screen.
 func (g *Grid) View(screen tcell.Screen) {
-	g.DrawForSubclass(screen, g)
+	g.Box.View(screen)
+
 	x, y, width, height := g.InnerRect()
 	screenWidth, screenHeight := screen.Size()
 

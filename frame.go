@@ -109,7 +109,7 @@ func (f *Frame) SetBorders(top, bottom, header, footer, left, right int) *Frame 
 
 // View draws this model onto the screen.
 func (f *Frame) View(screen tcell.Screen) {
-	f.DrawForSubclass(screen, f)
+	f.Box.View(screen)
 
 	// Calculate start positions.
 	x, top, width, height := f.InnerRect()

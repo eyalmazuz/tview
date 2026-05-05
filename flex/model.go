@@ -154,7 +154,7 @@ func (m *Model) ResizeItem(p tview.Model, fixedSize, proportion int) *Model {
 
 // View draws this model onto the screen.
 func (m *Model) View(screen tcell.Screen) {
-	m.DrawForSubclass(screen, m)
+	m.Box.View(screen)
 
 	// Calculate size and position of the items.
 

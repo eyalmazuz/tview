@@ -145,7 +145,7 @@ func (b *Button) View(screen tcell.Screen) {
 	}
 	backgroundColor := style.GetBackground()
 	b.SetBackgroundColor(backgroundColor)
-	b.DrawForSubclass(screen, b)
+	b.Box.View(screen)
 
 	// Draw label.
 	x, y, width, height := b.InnerRect()

@@ -347,7 +347,7 @@ func (l *Model) setLastDraw(children []drawnItem) {
 
 // View draws this model onto the screen.
 func (l *Model) View(screen tcell.Screen) {
-	l.DrawForSubclass(screen, l)
+	l.Box.View(screen)
 	l.scrollBarInteraction.state = listScrollBarState{}
 
 	x, y, width, height := l.InnerRect()

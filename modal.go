@@ -150,7 +150,7 @@ func (m *Modal) View(screen tcell.Screen) {
 	m.SetRect(x, y, width, height)
 
 	// Draw the frame.
-	m.DrawForSubclass(screen, m)
+	m.Box.View(screen)
 	x, y, width, height = m.InnerRect()
 	m.frame.SetRect(x, y, width, height)
 	m.frame.View(screen)
