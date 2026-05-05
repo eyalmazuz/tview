@@ -53,7 +53,10 @@ func compactCmds(cmds ...Cmd) []Cmd {
 
 type InitMsg struct{}
 
-type KeyMsg = *tcell.EventKey
+type (
+	KeyMsg   = *tcell.EventKey
+	FocusMsg = *tcell.EventFocus
+)
 
 type MouseMsg struct {
 	*tcell.EventMouse
