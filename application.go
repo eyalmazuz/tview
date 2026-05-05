@@ -129,13 +129,6 @@ func (a *Application) Run() error {
 
 	defer a.stop()
 
-	// We catch panics to clean up because they mess up the terminal.
-	defer func() {
-		if p := recover(); p != nil {
-			panic(p)
-		}
-	}()
-
 	go a.handleEvents()
 	go a.handleCmds()
 
@@ -262,19 +255,12 @@ func (a *Application) handleCmds() {
 		case <-a.done:
 			return
 		case cmd := <-a.cmds:
-			if cmd == nil {
-				continue
-			}
 			go a.execCmd(cmd)
 		}
 	}
 }
 
 func (a *Application) execCmd(cmd Cmd) {
-	if cmd == nil {
-		return
-	}
-
 	if !a.disableCatchPanics {
 		defer func() {
 			if r := recover(); r != nil {
@@ -304,9 +290,6 @@ func (a *Application) execSequenceMsg(msg sequenceMsg) {
 func (a *Application) execBatchMsg(msg batchMsg) {
 	var wg sync.WaitGroup
 	for _, cmd := range msg {
-		if cmd == nil {
-			continue
-		}
 		wg.Go(func() {
 			a.execCmd(cmd)
 		})
