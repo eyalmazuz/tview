@@ -349,9 +349,9 @@ func (l *Layers) Focus(delegate func(m tview.Model)) {
 	l.Box.Focus(delegate)
 }
 
-// Draw draws this model onto the screen.
-func (l *Layers) Draw(screen tcell.Screen) {
-	l.DrawForSubclass(screen, l)
+// View draws this model onto the screen.
+func (l *Layers) View(screen tcell.Screen) {
+	l.Box.View(screen)
 
 	overlayIndex := l.topVisibleEnabledOverlayIndex()
 	var ovScreen *overlayScreen
@@ -372,13 +372,19 @@ func (l *Layers) Draw(screen tcell.Screen) {
 			x, y, width, height := l.InnerRect()
 			layer.item.SetRect(x, y, width, height)
 		}
-		layer.item.Draw(layerScreen)
+		layer.item.View(layerScreen)
 	}
 }
 
 // Update handles input events for this model.
 func (l *Layers) Update(msg tview.Msg) tview.Cmd {
-	if mouseMsg, ok := msg.(*tview.MouseMsg); ok && !l.InRect(mouseMsg.Position()) {
+	if mouseMsg, ok := msg.(tview.MouseMsg); ok {
+		if !l.InRect(mouseMsg.Position()) {
+			return nil
+		}
+		if top := l.topVisibleEnabledLayer(); top != nil {
+			return top.item.Update(msg)
+		}
 		return nil
 	}
 

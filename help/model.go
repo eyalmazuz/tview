@@ -89,8 +89,8 @@ func (m *Model) SetKeyMap(keyMap KeyMap) *Model {
 	return m
 }
 
-func (m *Model) Draw(screen tcell.Screen) {
-	m.DrawForSubclass(screen, m)
+func (m *Model) View(screen tcell.Screen) {
+	m.Box.View(screen)
 
 	if m.keyMap == nil {
 		return

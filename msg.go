@@ -1,0 +1,133 @@
+package tview
+
+import "github.com/gdamore/tcell/v3"
+
+type Msg any
+
+// Cmd is a side effect requested by a model during input handling.
+type Cmd func() Msg
+
+type batchMsg []Cmd
+
+// Batch combines multiple commands into a single command.
+func Batch(cmds ...Cmd) Cmd {
+	valid := compactCmds(cmds...)
+	switch len(valid) {
+	case 0:
+		return nil
+	case 1:
+		return valid[0]
+	default:
+		return func() Msg {
+			return batchMsg(valid)
+		}
+	}
+}
+
+type sequenceMsg []Cmd
+
+// Sequence executes commands one at a time, in order.
+func Sequence(cmds ...Cmd) Cmd {
+	valid := compactCmds(cmds...)
+	switch len(valid) {
+	case 0:
+		return nil
+	case 1:
+		return valid[0]
+	default:
+		return func() Msg {
+			return sequenceMsg(valid)
+		}
+	}
+}
+
+func compactCmds(cmds ...Cmd) []Cmd {
+	valid := cmds[:0]
+	for _, cmd := range cmds {
+		if cmd != nil {
+			valid = append(valid, cmd)
+		}
+	}
+	return valid
+}
+
+type InitMsg struct{}
+
+func NewInitMsg() *InitMsg {
+	return &InitMsg{}
+}
+
+type (
+	KeyMsg    = *tcell.EventKey
+	FocusMsg  = *tcell.EventFocus
+	ResizeMsg = *tcell.EventResize
+)
+
+type MouseMsg struct {
+	*tcell.EventMouse
+	Action MouseAction
+}
+
+type PasteMsg string
+
+type quitMsg struct{}
+
+func Quit() Cmd {
+	return func() Msg {
+		return quitMsg{}
+	}
+}
+
+type setFocusMsg struct {
+	target Model
+}
+
+func SetFocus(target Model) Cmd {
+	return func() Msg {
+		return setFocusMsg{target: target}
+	}
+}
+
+type setMouseCaptureMsg struct {
+	target Model
+}
+
+func SetMouseCapture(target Model) Cmd {
+	return func() Msg {
+		return setMouseCaptureMsg{target: target}
+	}
+}
+
+type setTitleMsg string
+
+func SetTitle(title string) Cmd {
+	return func() Msg {
+		return setTitleMsg(title)
+	}
+}
+
+type getClipboardMsg struct{}
+
+func GetClipboard() Cmd {
+	return func() Msg {
+		return getClipboardMsg{}
+	}
+}
+
+type setClipboardMsg []byte
+
+func SetClipboard(data []byte) Cmd {
+	return func() Msg {
+		return setClipboardMsg(data)
+	}
+}
+
+type notifyMsg struct {
+	title, body string
+}
+
+func Notify(title, body string) Cmd {
+	return func() Msg {
+		return notifyMsg{title: title, body: body}
+	}
+}

@@ -269,9 +269,9 @@ func (c *Checkbox) Focus(delegate func(m Model)) {
 	c.Box.Focus(delegate)
 }
 
-// Draw draws this model onto the screen.
-func (c *Checkbox) Draw(screen tcell.Screen) {
-	c.DrawForSubclass(screen, c)
+// View draws this model onto the screen.
+func (c *Checkbox) View(screen tcell.Screen) {
+	c.Box.View(screen)
 
 	// Prepare
 	x, y, width, height := c.InnerRect()
@@ -316,7 +316,7 @@ func (c *Checkbox) Update(msg Msg) Cmd {
 	}
 
 	switch msg := msg.(type) {
-	case *KeyMsg:
+	case KeyMsg:
 		// Process key event.
 		switch key := msg.Key(); key {
 		case tcell.KeyRune, tcell.KeyEnter: // Check.
@@ -333,7 +333,7 @@ func (c *Checkbox) Update(msg Msg) Cmd {
 			}
 		}
 		return nil
-	case *MouseMsg:
+	case MouseMsg:
 		x, y := msg.Position()
 		_, rectY, _, _ := c.InnerRect()
 		if !c.InRect(x, y) {

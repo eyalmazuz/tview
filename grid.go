@@ -322,9 +322,10 @@ func (g *Grid) HasFocus() bool {
 	return g.Box.HasFocus()
 }
 
-// Draw draws this model onto the screen.
-func (g *Grid) Draw(screen tcell.Screen) {
-	g.DrawForSubclass(screen, g)
+// View draws this model onto the screen.
+func (g *Grid) View(screen tcell.Screen) {
+	g.Box.View(screen)
+
 	x, y, width, height := g.InnerRect()
 	screenWidth, screenHeight := screen.Size()
 
@@ -628,9 +629,9 @@ ItemLoop:
 
 		// Draw model.
 		if item == focus {
-			defer item.Item.Draw(screen)
+			defer item.Item.View(screen)
 		} else {
-			item.Item.Draw(screen)
+			item.Item.View(screen)
 		}
 
 		// Draw border around model.
@@ -684,21 +685,22 @@ ItemLoop:
 // Update handles input events for this model.
 func (g *Grid) Update(msg Msg) Cmd {
 	switch msg := msg.(type) {
-	case *MouseMsg:
-		if !g.InRect(msg.Position()) {
+	case MouseMsg:
+		x, y := msg.Position()
+		if !g.InRect(x, y) {
 			return nil
 		}
 
 		// Pass mouse events along to the first child item that takes it.
 		for _, item := range g.items {
-			if item.Item == nil {
+			if item.Item == nil || !item.visible {
 				continue
 			}
-			if cmd := item.Item.Update(msg); cmd != nil {
-				return cmd
+			if ModelInRect(item.Item, x, y) {
+				return item.Item.Update(msg)
 			}
 		}
-	case *KeyMsg:
+	case KeyMsg:
 		previousRowOffset, previousColumnOffset := g.rowOffset, g.columnOffset
 		if !g.hasFocus {
 			// Pass event on to child model.

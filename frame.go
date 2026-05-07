@@ -107,9 +107,9 @@ func (f *Frame) SetBorders(top, bottom, header, footer, left, right int) *Frame 
 	return f
 }
 
-// Draw draws this model onto the screen.
-func (f *Frame) Draw(screen tcell.Screen) {
-	f.DrawForSubclass(screen, f)
+// View draws this model onto the screen.
+func (f *Frame) View(screen tcell.Screen) {
+	f.Box.View(screen)
 
 	// Calculate start positions.
 	x, top, width, height := f.InnerRect()
@@ -167,7 +167,7 @@ func (f *Frame) Draw(screen tcell.Screen) {
 		f.primitive.SetRect(x, top, width, bottom+1-top)
 
 		// Finally, draw the contained model.
-		f.primitive.Draw(screen)
+		f.primitive.View(screen)
 	}
 }
 
@@ -192,24 +192,22 @@ func (f *Frame) HasFocus() bool {
 // Update handles input events for this model.
 func (f *Frame) Update(msg Msg) Cmd {
 	switch msg := msg.(type) {
-	case *MouseMsg:
-		if !f.InRect(msg.Position()) {
+	case MouseMsg:
+		x, y := msg.Position()
+		if !f.InRect(x, y) {
 			return nil
 		}
 
 		// Pass mouse events on to contained model.
-		if f.primitive != nil {
-			childCmds := f.primitive.Update(msg)
-			if childCmds != nil {
-				return childCmds
-			}
+		if f.primitive != nil && ModelInRect(f.primitive, x, y) {
+			return f.primitive.Update(msg)
 		}
 
 		// Clicking on the frame parts.
 		if msg.Action == MouseLeftDown {
 			return SetFocus(f)
 		}
-	case *KeyMsg, *PasteMsg:
+	case KeyMsg, PasteMsg:
 		if f.primitive == nil {
 			return nil
 		}

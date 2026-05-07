@@ -152,9 +152,9 @@ func (m *Model) ResizeItem(p tview.Model, fixedSize, proportion int) *Model {
 	return m
 }
 
-// Draw draws this model onto the screen.
-func (m *Model) Draw(screen tcell.Screen) {
-	m.DrawForSubclass(screen, m)
+// View draws this model onto the screen.
+func (m *Model) View(screen tcell.Screen) {
+	m.Box.View(screen)
 
 	// Calculate size and position of the items.
 
@@ -206,9 +206,9 @@ func (m *Model) Draw(screen tcell.Screen) {
 
 		if item.Item != nil {
 			if item.Item.HasFocus() {
-				defer item.Item.Draw(screen)
+				defer item.Item.View(screen)
 			} else {
-				item.Item.Draw(screen)
+				item.Item.View(screen)
 			}
 		}
 	}
@@ -238,8 +238,9 @@ func (m *Model) HasFocus() bool {
 // Update handles input events for this model.
 func (m *Model) Update(msg tview.Msg) tview.Cmd {
 	switch msg := msg.(type) {
-	case *tview.MouseMsg:
-		if !m.InRect(msg.Position()) {
+	case tview.MouseMsg:
+		x, y := msg.Position()
+		if !m.InRect(x, y) {
 			return nil
 		}
 
@@ -248,9 +249,8 @@ func (m *Model) Update(msg tview.Msg) tview.Cmd {
 			if item.Item == nil {
 				continue
 			}
-			childCmds := item.Item.Update(msg)
-			if childCmds != nil {
-				return childCmds
+			if tview.ModelInRect(item.Item, x, y) {
+				return item.Item.Update(msg)
 			}
 		}
 		return nil

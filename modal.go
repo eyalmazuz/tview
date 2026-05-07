@@ -26,13 +26,12 @@ type Modal struct {
 }
 
 type ModalDoneMsg struct {
-	tcell.EventTime
 	ButtonIndex int
 	ButtonLabel string
 }
 
-func newModalDoneMsg(buttonIndex int, buttonLabel string) *ModalDoneMsg {
-	return &ModalDoneMsg{
+func newModalDoneMsg(buttonIndex int, buttonLabel string) ModalDoneMsg {
+	return ModalDoneMsg{
 		ButtonIndex: buttonIndex,
 		ButtonLabel: buttonLabel,
 	}
@@ -124,8 +123,8 @@ func (m *Modal) HasFocus() bool {
 	return m.form.HasFocus()
 }
 
-// Draw draws this model onto the screen.
-func (m *Modal) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (m *Modal) View(screen tcell.Screen) {
 	// Calculate the width of this modal.
 	buttonsWidth := 0
 	for _, button := range m.form.buttons {
@@ -151,35 +150,36 @@ func (m *Modal) Draw(screen tcell.Screen) {
 	m.SetRect(x, y, width, height)
 
 	// Draw the frame.
-	m.DrawForSubclass(screen, m)
+	m.Box.View(screen)
 	x, y, width, height = m.InnerRect()
 	m.frame.SetRect(x, y, width, height)
-	m.frame.Draw(screen)
+	m.frame.View(screen)
 }
 
 // Update handles input events for this model.
 func (m *Modal) Update(msg Msg) Cmd {
 	switch msg := msg.(type) {
-	case *FormSubmitMsg:
+	case FormSubmitMsg:
 		buttonIndex := msg.ButtonIndex
 		buttonLabel := msg.ButtonLabel
 		return func() Msg {
 			return newModalDoneMsg(buttonIndex, buttonLabel)
 		}
-	case *FormCancelMsg:
+	case FormCancelMsg:
 		return func() Msg {
 			return newModalDoneMsg(-1, "")
 		}
-	case *ButtonExitMsg:
+	case ButtonExitMsg:
 		return m.form.Update(msg)
-	case *MouseMsg:
-		// Pass mouse events on to the form.
-		cmd := m.form.Update(msg)
-		if cmd == nil && msg.Action == MouseLeftDown && m.InRect(msg.Position()) {
-			cmd = SetFocus(m)
+	case MouseMsg:
+		x, y := msg.Position()
+		if m.form.InRect(x, y) {
+			return m.form.Update(msg)
 		}
-		return cmd
-	case *KeyMsg:
+		if msg.Action == MouseLeftDown && m.InRect(x, y) {
+			return SetFocus(m)
+		}
+	case KeyMsg:
 		// Keep arrow-key navigation between modal buttons.
 		switch msg.Key() {
 		case tcell.KeyDown, tcell.KeyRight:
@@ -191,7 +191,7 @@ func (m *Modal) Update(msg Msg) Cmd {
 		if m.frame.HasFocus() {
 			return m.frame.Update(msg)
 		}
-	case *PasteMsg:
+	case PasteMsg:
 		if m.frame.HasFocus() {
 			return m.frame.Update(msg)
 		}

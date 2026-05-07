@@ -5,21 +5,19 @@ import (
 )
 
 type ButtonSelectedMsg struct {
-	tcell.EventTime
 	Label string
 }
 
-func newButtonSelectedMsg(label string) *ButtonSelectedMsg {
-	return &ButtonSelectedMsg{Label: label}
+func newButtonSelectedMsg(label string) ButtonSelectedMsg {
+	return ButtonSelectedMsg{Label: label}
 }
 
 type ButtonExitMsg struct {
-	tcell.EventTime
 	tcell.Key
 }
 
-func newButtonExitMsg(key tcell.Key) *ButtonExitMsg {
-	return &ButtonExitMsg{Key: key}
+func newButtonExitMsg(key tcell.Key) ButtonExitMsg {
+	return ButtonExitMsg{Key: key}
 }
 
 // Button is labeled box that triggers an action when selected.
@@ -135,8 +133,8 @@ func (b *Button) GetDisabled() bool {
 	return b.disabled
 }
 
-// Draw draws this model onto the screen.
-func (b *Button) Draw(screen tcell.Screen) {
+// View draws this model onto the screen.
+func (b *Button) View(screen tcell.Screen) {
 	// Draw the box.
 	style := b.style
 	if b.disabled {
@@ -147,7 +145,7 @@ func (b *Button) Draw(screen tcell.Screen) {
 	}
 	backgroundColor := style.GetBackground()
 	b.SetBackgroundColor(backgroundColor)
-	b.DrawForSubclass(screen, b)
+	b.Box.View(screen)
 
 	// Draw label.
 	x, y, width, height := b.InnerRect()
@@ -164,7 +162,7 @@ func (b *Button) Update(msg Msg) Cmd {
 	}
 
 	switch msg := msg.(type) {
-	case *KeyMsg:
+	case KeyMsg:
 		// Process key event.
 		switch key := msg.Key(); key {
 		case tcell.KeyEnter: // Selected.
@@ -179,7 +177,7 @@ func (b *Button) Update(msg Msg) Cmd {
 			}
 		}
 		return nil
-	case *MouseMsg:
+	case MouseMsg:
 		if !b.InRect(msg.Position()) {
 			return nil
 		}

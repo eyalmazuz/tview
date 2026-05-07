@@ -7,7 +7,6 @@ import (
 )
 
 type TreeViewSelectedMsg struct {
-	tcell.EventTime
 	Node *TreeNode
 }
 
@@ -415,7 +414,7 @@ func (t *TreeView) GetRoot() *TreeNode {
 //
 // This function does NOT trigger the "changed" callback because the actual node
 // that will be selected is not known until the tree is drawn. Triggering the
-// "changed" callback is thus deferred until the next call to [TreeView.Draw].
+// "changed" callback is thus deferred until the next call to [TreeView.View].
 func (t *TreeView) SetCurrentNode(node *TreeNode) *TreeView {
 	if t.currentNode != node {
 		t.currentNode = node
@@ -581,8 +580,8 @@ func (t *TreeView) Move(offset int) *TreeView {
 
 // process builds the visible tree, populates the "nodes" slice, and processes
 // pending movement actions. Set "drawingAfter" to true if you know that
-// [TreeView.Draw] will be called immediately after this function (to avoid
-// having [TreeView.Draw] call it again).
+// [TreeView.View] will be called immediately after this function (to avoid
+// having [TreeView.View] call it again).
 func (t *TreeView) process(drawingAfter bool) {
 	t.stableNodes = drawingAfter
 	_, _, _, height := t.InnerRect()
@@ -747,9 +746,9 @@ func (t *TreeView) process(drawingAfter bool) {
 	t.lastNode = t.currentNode
 }
 
-// Draw draws this model onto the screen.
-func (t *TreeView) Draw(screen tcell.Screen) {
-	t.DrawForSubclass(screen, t)
+// View draws this model onto the screen.
+func (t *TreeView) View(screen tcell.Screen) {
+	t.Box.View(screen)
 	if t.root == nil {
 		return
 	}
@@ -956,11 +955,11 @@ func (t *TreeView) selectCurrentNode() Cmd {
 	}
 	selectedNode := node
 	return func() Msg {
-		return &TreeViewSelectedMsg{Node: selectedNode}
+		return TreeViewSelectedMsg{Node: selectedNode}
 	}
 }
 
-func (t *TreeView) handleKeyMsg(msg *KeyMsg) Cmd {
+func (t *TreeView) handleKeyMsg(msg KeyMsg) Cmd {
 	// Because the tree is flattened into a list only at drawing time, we also
 	// postpone the (cursor) movement to drawing time.
 	var selectCmd Cmd
@@ -1010,7 +1009,7 @@ func (t *TreeView) handleKeyMsg(msg *KeyMsg) Cmd {
 	return selectCmd
 }
 
-func (t *TreeView) handleMouseMsg(msg *MouseMsg) Cmd {
+func (t *TreeView) handleMouseMsg(msg MouseMsg) Cmd {
 	x, y := msg.Position()
 	if !t.InRect(x, y) {
 		return nil
@@ -1039,8 +1038,8 @@ func (t *TreeView) handleMouseMsg(msg *MouseMsg) Cmd {
 			node := t.nodes[y]
 			if node.selectable {
 				t.currentNode = node
-				return Batch(SetFocus(t), func() Msg {
-					return &TreeViewSelectedMsg{Node: node}
+				return Sequence(SetFocus(t), func() Msg {
+					return TreeViewSelectedMsg{Node: node}
 				})
 			}
 		}
@@ -1058,9 +1057,9 @@ func (t *TreeView) handleMouseMsg(msg *MouseMsg) Cmd {
 // Update handles input events for this model.
 func (t *TreeView) Update(msg Msg) Cmd {
 	switch msg := msg.(type) {
-	case *KeyMsg:
+	case KeyMsg:
 		return t.handleKeyMsg(msg)
-	case *MouseMsg:
+	case MouseMsg:
 		return t.handleMouseMsg(msg)
 	}
 	return nil

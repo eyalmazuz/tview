@@ -358,9 +358,9 @@ func (l *Model) setLastDraw(children []drawnItem) {
 	l.lastDraw = children
 }
 
-// Draw draws this model onto the screen.
-func (l *Model) Draw(screen tcell.Screen) {
-	l.DrawForSubclass(screen, l)
+// View draws this model onto the screen.
+func (l *Model) View(screen tcell.Screen) {
+	l.Box.View(screen)
 	l.scrollBarInteraction.state = listScrollBarState{}
 
 	x, y, width, height := l.InnerRect()
@@ -609,7 +609,7 @@ rebuild:
 	clipped := newClippedScreen(screen, x, y, width, height)
 	for _, child := range children {
 		child.item.SetRect(x, y+child.row, usableWidth, child.height)
-		child.item.Draw(clipped)
+		child.item.View(clipped)
 	}
 
 	if drawScrollBar {
@@ -628,7 +628,7 @@ rebuild:
 			ViewportLen: scrollBarState.viewportLength,
 		})
 		l.scrollBar.SetOffset(scrollBarState.position)
-		l.scrollBar.Draw(screen)
+		l.scrollBar.View(screen)
 	}
 }
 
@@ -921,7 +921,7 @@ func (l *Model) endScrollState(width int, height int) (int, int) {
 // Update handles input events for this model.
 func (l *Model) Update(msg tview.Msg) tview.Cmd {
 	switch msg := msg.(type) {
-	case *tview.KeyMsg:
+	case tview.KeyMsg:
 		switch {
 		case keybind.Matches(msg, l.keybinds.SelectDown):
 			l.NextItem()
@@ -945,7 +945,7 @@ func (l *Model) Update(msg tview.Msg) tview.Cmd {
 			l.ScrollBottom()
 		}
 		return nil
-	case *tview.MouseMsg:
+	case tview.MouseMsg:
 		var cmd tview.Cmd
 		x, y := msg.Position()
 		if l.scrollBarInteraction.dragDelta >= 0 {
@@ -982,7 +982,7 @@ func (l *Model) Update(msg tview.Msg) tview.Cmd {
 				if l.startScrollBarDrag(row, innerHeight, contentWidth) {
 					return tview.Batch(cmd, tview.SetMouseCapture(l))
 				}
-				return nil
+				return cmd
 			case tview.MouseLeftClick:
 				if l.scrollBarInteraction.dragMoved {
 					l.scrollBarInteraction.dragMoved = false

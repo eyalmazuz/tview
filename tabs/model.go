@@ -80,9 +80,9 @@ func (m *Model) Update(msg tview.Msg) tview.Cmd {
 	}
 
 	switch msg := msg.(type) {
-	case *tview.InitMsg:
+	case tview.InitMsg:
 		return m.activateTab()
-	case *tview.KeyMsg:
+	case tview.KeyMsg:
 		switch {
 		case keybind.Matches(msg, m.keybinds.Previous):
 			if !m.canPrevious() {
@@ -97,7 +97,7 @@ func (m *Model) Update(msg tview.Msg) tview.Cmd {
 			m.Next()
 			return m.activateTab()
 		}
-	case *tview.MouseMsg:
+	case tview.MouseMsg:
 		x, y := msg.Position()
 		if !m.InRect(x, y) {
 			return nil
@@ -133,8 +133,8 @@ func (m *Model) Update(msg tview.Msg) tview.Cmd {
 	return m.tabs[m.active].Update(msg)
 }
 
-func (m *Model) Draw(screen tcell.Screen) {
-	m.DrawForSubclass(screen, m)
+func (m *Model) View(screen tcell.Screen) {
+	m.Box.View(screen)
 
 	if len(m.tabs) == 0 {
 		return
@@ -160,13 +160,13 @@ func (m *Model) Draw(screen tcell.Screen) {
 		height--
 
 		content.SetRect(x, y, width, height)
-		content.Draw(screen)
+		content.View(screen)
 	}
 }
 
 func (m *Model) activateTab() tview.Cmd {
-	return tview.Batch(
-		m.tabs[m.active].Update(&tview.InitMsg{}),
+	return tview.Sequence(
+		m.tabs[m.active].Update(tview.InitMsg{}),
 		tview.SetFocus(m),
 	)
 }
